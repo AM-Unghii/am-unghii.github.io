@@ -22,7 +22,7 @@ export async function callServer(
   outgoing: Appointment[],
   procedures: { list: Procedure[]; updatedAt: string },
 ): Promise<ServerReply> {
-  if (!/^https:\/\/script\.google\.com\//.test(sc.url)) throw new SyncError('adresa');
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(sc.url)) throw new SyncError('adresa');
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 30000);
   let text: string;
