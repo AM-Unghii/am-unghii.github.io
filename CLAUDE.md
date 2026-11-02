@@ -13,7 +13,9 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - `App.tsx` — taburi (Program / Rapoarte / Setări)
 - `src/i18n.ts` — TOATE textele vizibile (română)
 - `src/store/` — stare + salvare locală (AsyncStorage) cu copie de siguranță automată
-- `src/services/` — notificări, calendar telefon (+ link Google Calendar), Excel (export/import)
+- `src/services/` — notificări, calendar telefon (+ link Google Calendar), Excel (export/import), `sync.ts` (client sincronizare)
+- `apps-script/Code.gs` — server de sincronizare (Google Sheet); `docs/SINCRONIZARE.md` — ghid
+- `public/` — PWA (manifest, service worker, iconițe); `.github/workflows/pages.yml` — publicare web
 - `src/components/`, `src/screens/` — UI
 
 ## Reguli
@@ -22,4 +24,7 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - Date reale rămân local; în repo doar date fictive.
 - Prețul e opțional și apare doar dacă `settings.usePrices` e pornit.
 - Datele se salvează la fiecare modificare; nu introduce cod care șterge/rescrie datele fără confirmare.
+- Ștergerea = marcaj `deleted:true` (nu se scoate rândul), altfel nu se sincronizează. UI folosește doar `appointments` din context (fără șterse).
+- Cea mai recentă `updatedAt` câștigă la sincronizare; orice modificare de programare setează `updatedAt`.
+- `EXPO_BASE_URL` se setează doar în CI (GitHub Pages); local rămâne gol.
 - Data = `YYYY-MM-DD`, ora = `HH:mm` (fără fusuri orare, ca să nu se „mute” programările).

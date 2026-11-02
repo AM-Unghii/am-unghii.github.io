@@ -25,6 +25,8 @@ export interface Appointment {
   notes?: string;
   status: Status;
   calendarEventId?: string;
+  /** șters (rămâne ca „pietre de mormânt” ca ștergerea să se sincronizeze) */
+  deleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,10 +43,20 @@ export interface Settings {
   dayEndHour: number;
 }
 
+export interface SyncState {
+  url: string;
+  key: string;
+  lastPull: number;
+  lastPush: string;
+  lastSyncAt?: string;
+}
+
 export interface AppData {
   version: 1;
   appointments: Appointment[];
   procedures: Procedure[];
+  proceduresUpdatedAt: string;
+  sync?: SyncState;
   settings: Settings;
   savedAt: string;
 }

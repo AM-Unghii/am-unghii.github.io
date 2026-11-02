@@ -26,6 +26,7 @@ export function emptyData(): AppData {
     version: 1,
     appointments: [],
     procedures: defaultProcedures,
+    proceduresUpdatedAt: '1970-01-01T00:00:00.000Z',
     settings: defaultSettings,
     savedAt: new Date().toISOString(),
   };
@@ -37,6 +38,8 @@ function normalize(raw: any): AppData | null {
     version: 1,
     appointments: raw.appointments,
     procedures: Array.isArray(raw.procedures) && raw.procedures.length ? raw.procedures : defaultProcedures,
+    proceduresUpdatedAt: raw.proceduresUpdatedAt || '1970-01-01T00:00:00.000Z',
+    sync: raw.sync || undefined,
     settings: { ...defaultSettings, ...(raw.settings || {}) },
     savedAt: raw.savedAt || new Date().toISOString(),
   };

@@ -32,7 +32,9 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "lang": "ro",
+      "name": "Programări Unghii"
     },
     "plugins": [
       [

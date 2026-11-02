@@ -24,7 +24,12 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 export function SettingsScreen() {
-  const { appointments, procedures, settings, updateSettings, saveProcedure, deleteProcedure, importAppointments, savedAt } = useApp();
+  const { appointments, procedures, settings, updateSettings, saveProcedure, deleteProcedure, importAppointments, savedAt,
+    syncConnected, syncStatus, syncError, lastSyncAt, syncNow, connectSync, disconnectSync } = useApp();
+  const [sUrl, setSUrl] = useState('');
+  const [sKey, setSKey] = useState('');
+  const [sBusy, setSBusy] = useState(false);
+  const [sErr, setSErr] = useState('');
   const [editing, setEditing] = useState<Procedure | null>(null);
   const [msg, setMsg] = useState('');
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -38,6 +43,13 @@ export function SettingsScreen() {
   const setReminder = async (v: number | null) => {
     if (v !== null) await ensureNotificationPermission();
     updateSettings({ reminderMinutes: v });
+  };
+
+  const doConnect = async () => {
+    setSBusy(true); setSErr('');
+    const err = await connectSync(sUrl, sKey);
+    setSBusy(false);
+    if (err) setSErr(err); else { setSUrl(''); setSKey(''); }
   };
 
   const doExport = async () => {
@@ -57,6 +69,33 @@ export function SettingsScreen() {
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
       <Text style={st.h1}>{t.settings.title}</Text>
+
+      <Section title={t.sync.title} hint={t.sync.hint}>
+        {syncConnected ? (
+          <>
+            <Row>
+              <Ionicons name={syncStatus === 'error' ? 'cloud-offline' : syncStatus === 'syncing' ? 'sync' : 'cloud-done'} size={22}
+                color={syncStatus === 'error' ? colors.danger : colors.success} />
+              <Text style={[st.rowText, { marginLeft: 10 }]}>{syncStatus === 'ok' || syncStatus === 'idle' || syncStatus === 'syncing' || syncStatus === 'error' ? t.sync.status[syncStatus] : t.sync.connected}</Text>
+            </Row>
+            {syncError ? <Text style={[st.msg, { color: colors.danger }]}>{syncError}</Text> : null}
+            {lastSyncAt ? <Text style={st.sub}>{t.sync.last}: {new Date(lastSyncAt).toLocaleString('ro-RO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text> : null}
+            <Btn kind="soft" icon="sync" label={t.sync.now} onPress={syncNow} style={{ marginTop: 12 }} disabled={syncStatus === 'syncing'} />
+            <Btn kind="ghost" label={t.sync.disconnect} onPress={() => disconnectSync()} style={{ marginTop: 6 }} />
+            <Text style={[st.sub, { marginTop: 8 }]}>{t.sync.calendarNote}</Text>
+          </>
+        ) : (
+          <>
+            <Text style={st.sub}>{t.sync.steps}</Text>
+            <Label>{t.sync.url}</Label>
+            <Input value={sUrl} onChangeText={setSUrl} autoCapitalize="none" autoCorrect={false} placeholder="https://script.google.com/macros/s/…/exec" />
+            <Label>{t.sync.pass}</Label>
+            <Input value={sKey} onChangeText={setSKey} autoCapitalize="none" autoCorrect={false} secureTextEntry />
+            {sErr ? <Text style={[st.msg, { color: colors.danger }]}>{sErr}</Text> : null}
+            <Btn icon="cloud-upload-outline" label={sBusy ? t.sync.connecting : t.sync.connect} onPress={doConnect} disabled={sBusy || !sUrl.trim()} style={{ marginTop: 14 }} />
+          </>
+        )}
+      </Section>
 
       <Section title={t.settings.prices} hint={t.settings.pricesHint}>
         <Row style={{ justifyContent: 'space-between' }}>
