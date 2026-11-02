@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +22,7 @@ function Shell() {
   const [tab, setTab] = useState<Tab>('program');
   const insets = useSafeAreaInsets();
   if (!loaded) {
-    return <View style={st.center}><ActivityIndicator size="large" color={colors.primary} /><Text style={st.loading}>{t.loading}</Text></View>;
+    return <View style={st.center}><Image source={require('./assets/logo.png')} style={{ width: 260, height: 120 }} resizeMode="contain" /><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 16 }} /><Text style={st.loading}>{t.loading}</Text></View>;
   }
   return (
     <View style={st.root}>

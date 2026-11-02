@@ -16,12 +16,17 @@
     "android": {
       "package": "ro.programari.unghii",
       "adaptiveIcon": {
-        "backgroundColor": "#FCE7EF",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["READ_CALENDAR", "WRITE_CALENDAR", "POST_NOTIFICATIONS", "SCHEDULE_EXACT_ALARM"],
+      "permissions": [
+        "READ_CALENDAR",
+        "WRITE_CALENDAR",
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -30,9 +35,25 @@
       "output": "single"
     },
     "plugins": [
-      ["expo-calendar", { "calendarPermission": "Aplicația adaugă programările în calendarul telefonului.", "remindersPermission": "Aplicația poate adăuga memento-uri." }],
-      ["expo-notifications", { "color": "#D6457A" }],
-      ["expo-document-picker", { "iCloudContainerEnvironment": "Production" }]
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Aplicația adaugă programările în calendarul telefonului.",
+          "remindersPermission": "Aplicația poate adăuga memento-uri."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#D6457A"
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
     ]
   }
 }
