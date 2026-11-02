@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle, Platform, KeyboardAvoidingView,
+  Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle, Platform, KeyboardAvoidingView,
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -131,6 +131,7 @@ export function Hero({ title, subtitle, children, right }: { title: string; subt
   return (
     <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.hero, wide && s.heroWide]}>
       <View style={s.heroGlow} pointerEvents="none" />
+      <Image source={require('../../assets/logo-light.png')} style={[s.heroLogo, wide && s.heroLogoWide]} resizeMode="contain" accessibilityLabel="A.M. Unghii" />
       <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
         <View style={{ flex: 1 }}>
           {subtitle ? <Text style={s.heroSub} numberOfLines={1}>{subtitle}</Text> : null}
@@ -211,6 +212,8 @@ const s = StyleSheet.create({
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   hero: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 18, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: 'hidden' },
   heroWide: { marginHorizontal: 24, marginTop: 20, borderRadius: 28, paddingHorizontal: 28, paddingTop: 26, paddingBottom: 22 },
+  heroLogo: { position: 'absolute', top: 4, right: 14, width: 84, height: 34 },
+  heroLogoWide: { top: 10, right: 24, width: 108, height: 44 },
   heroGlow: { position: 'absolute', right: -60, top: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(198,161,106,0.22)' },
   heroSub: { color: '#E9C9D6', fontSize: 12, ...font.w700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
   heroTitle: { color: '#fff', fontSize: 30, ...font.display },

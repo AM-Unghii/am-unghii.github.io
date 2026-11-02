@@ -37,3 +37,23 @@ make('alb-patrat', 180).convert('RGB').save('public/apple-touch-icon.png', optim
 make('alb-patrat', 1024).convert('RGB').save('assets/icon.png', optimize=True)
 make('alb-patrat', 96).convert('RGB').save('assets/favicon.png', optimize=True)
 print('gata')
+
+
+# Logo pentru fundal închis (antetul aplicației): textul închis devine alb, acuarela rămâne.
+def make_light_logo(path='assets/logo-light.png', width=480):
+    import colorsys
+    lg = Image.open(SRC).convert('RGBA')
+    px = lg.load()
+    for y in range(lg.height):
+        for x in range(lg.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if s < 0.18 and v < 0.62:
+                px[x, y] = (255, 255, 255, a)
+    lg = lg.crop(lg.split()[3].point(lambda v: 255 if v > 8 else 0).getbbox())
+    lg.resize((width, round(width * lg.height / lg.width)), Image.LANCZOS).save(path, optimize=True)
+
+
+make_light_logo()
