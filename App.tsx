@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { colors, font, gradients, shadow } from './src/theme';
 import { t } from './src/i18n';
 import { useWide } from './src/components/ui';
 import { todayISO } from './src/utils/date';
+import { applyAppIcon, logoImages, logoVariant } from './src/services/appIcon';
 
 type Tab = 'program' | 'reports' | 'settings';
 const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof typeof Ionicons.glyphMap }[] = [
@@ -69,13 +70,15 @@ function Sidebar({ tab, setTab, onNew }: { tab: Tab; setTab: (t: Tab) => void; o
 }
 
 function Shell() {
-  const { loaded } = useApp();
+  const { loaded, settings } = useApp();
   const [tab, setTab] = useState<Tab>('program');
   const [newSignal, setNewSignal] = useState(0);
   const insets = useSafeAreaInsets();
   const wide = useWide();
+  const variant = logoVariant(settings.logoBg, settings.logoShape);
+  useEffect(() => { if (loaded) applyAppIcon(variant); }, [loaded, variant]);
   if (!loaded) {
-    return <View style={st.center}><Image source={require('./assets/logo.png')} style={{ width: 260, height: 120 }} resizeMode="contain" /><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 16 }} /><Text style={st.loading}>{t.loading}</Text></View>;
+    return <View style={st.center}><Image source={logoImages['alb-patrat']} style={{ width: 240, height: 240 }} resizeMode="contain" /><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 16 }} /><Text style={st.loading}>{t.loading}</Text></View>;
   }
   const screens = (
     <>

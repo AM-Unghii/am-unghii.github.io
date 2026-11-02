@@ -1,16 +1,27 @@
 {
+  "id": "programari-unghii",
   "name": "Programări Unghii",
   "short_name": "Programări",
   "description": "Programări manichiură și pedichiură",
   "lang": "ro",
-  "start_url": ".",
-  "scope": ".",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFFFFF",
   "theme_color": "#FBF7F8",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "icons/alb-patrat-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/alb-patrat-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }

@@ -20,6 +20,8 @@ export const defaultSettings: Settings = {
   defaultView: 'saptamana',
   dayStartHour: 8,
   dayEndHour: 20,
+  logoBg: 'alb',
+  logoShape: 'patrat',
 };
 
 export function emptyData(): AppData {

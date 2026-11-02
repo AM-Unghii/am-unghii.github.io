@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../store/AppContext';
 import { NotifyVia, Procedure, ViewMode } from '../types';
@@ -10,6 +10,8 @@ import { uid } from '../utils/date';
 import { exportExcel, pickAndParseExcel } from '../services/excel';
 import { DeviceCalendar, ensureCalendarPermission, listWritableCalendars } from '../services/calendar';
 import { ensureNotificationPermission } from '../services/notifications';
+import { logoImages, logoVariant } from '../services/appIcon';
+import { defaultSettings } from '../store/storage';
 
 const say = (msg: string) => (Platform.OS === 'web' ? window.alert(msg) : Alert.alert(t.appName, msg));
 
@@ -217,6 +219,31 @@ export function SettingsScreen() {
         </ScrollView>
       </Section>
 
+      <Section icon="image-outline" title={t.settings.logo} hint={t.settings.logoHint}>
+        <View style={st.logoBox}>
+          <Image source={logoImages[logoVariant(settings.logoBg, settings.logoShape)]} style={st.logoImg} resizeMode="contain"
+            accessibilityLabel={t.settings.logo} />
+        </View>
+        <Label>{t.settings.logoBg}</Label>
+        <Row style={{ flexWrap: 'wrap' }}>
+          {(['alb', 'transparent'] as const).map((v) => (
+            <Chip key={v} small label={t.settings.logoBgOpts[v]} active={settings.logoBg === v} onPress={() => updateSettings({ logoBg: v })} />
+          ))}
+        </Row>
+        <Label>{t.settings.logoShape}</Label>
+        {settings.logoBg === 'alb' ? (
+          <Row style={{ flexWrap: 'wrap' }}>
+            {(['patrat', 'rotund'] as const).map((v) => (
+              <Chip key={v} small label={t.settings.logoShapeOpts[v]} active={settings.logoShape === v} onPress={() => updateSettings({ logoShape: v })} />
+            ))}
+          </Row>
+        ) : <Text style={st.sub}>{t.settings.logoShapeNoBg}</Text>}
+        <Btn kind="ghost" icon="refresh" label={t.settings.logoReset} style={{ marginTop: 10 }}
+          disabled={settings.logoBg === defaultSettings.logoBg && settings.logoShape === defaultSettings.logoShape}
+          onPress={() => updateSettings({ logoBg: defaultSettings.logoBg, logoShape: defaultSettings.logoShape })} />
+        <Text style={[st.sub, { marginTop: 8 }]}>{Platform.OS === 'web' ? t.settings.logoNote : t.settings.logoNoteNative}</Text>
+      </Section>
+
       <Section icon="shield-checkmark-outline" title={t.settings.data} hint={t.settings.dataHint}>
         <Btn icon="download-outline" label={t.settings.exportExcel} onPress={doExport} />
         <Btn kind="soft" icon="cloud-upload-outline" label={t.settings.importExcel} onPress={doImport} style={{ marginTop: 10 }} />
@@ -278,4 +305,6 @@ const st = StyleSheet.create({
   msg: { marginTop: 12, color: colors.primaryDark, ...font.w700, fontSize: 15 },
   swatch: { width: 40, height: 40, borderRadius: 20, marginRight: 10, borderWidth: 3, borderColor: 'transparent' },
   swatchOn: { borderColor: colors.ink },
+  logoBox: { alignSelf: 'center', padding: 14, borderRadius: 22, backgroundColor: colors.plum },
+  logoImg: { width: 140, height: 140 },
 });
