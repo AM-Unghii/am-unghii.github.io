@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Sheet, IconBtn, Btn } from './ui';
-import { colors } from '../theme';
+import { colors, font } from '../theme';
 import { t } from '../i18n';
 import { addDays, addMonths, dayNum, endOfMonth, monthYear, startOfMonth, startOfWeek, todayISO, rangeDays } from '../utils/date';
 
@@ -30,7 +30,7 @@ export function DatePicker({
           return (
             <Pressable key={d} onPress={() => { onPick(d); onClose(); }} style={st.cellWrap} accessibilityLabel={d}>
               <View style={[st.cell, sel && { backgroundColor: colors.primary }, !sel && d === today && { borderWidth: 2, borderColor: colors.primary }]}>
-                <Text style={[st.num, !inMonth && { color: '#CFC6D2' }, sel && { color: '#fff', fontWeight: '800' }]}>{dayNum(d)}</Text>
+                <Text style={[st.num, !inMonth && { color: '#CFC6D2' }, sel && { color: '#fff', ...font.w800 }]}>{dayNum(d)}</Text>
               </View>
             </Pressable>
           );
@@ -43,11 +43,11 @@ export function DatePicker({
 
 const st = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  month: { fontSize: 19, fontWeight: '800', color: colors.ink },
+  month: { fontSize: 19, ...font.w800, color: colors.ink },
   row: { flexDirection: 'row', marginTop: 8 },
-  dow: { flex: 1, textAlign: 'center', color: colors.muted, fontWeight: '700', fontSize: 13 },
+  dow: { flex: 1, textAlign: 'center', color: colors.muted, ...font.w700, fontSize: 13 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
   cellWrap: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3 },
   cell: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  num: { fontSize: 17, color: colors.ink, fontWeight: '600' },
+  num: { fontSize: 17, color: colors.ink, ...font.w600 },
 });

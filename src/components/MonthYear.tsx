@@ -1,14 +1,14 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Appointment, Procedure } from '../types';
-import { colors, radius, shadow } from '../theme';
+import { colors, radius, shadow, font } from '../theme';
 import { t } from '../i18n';
 import { addDays, dayNum, endOfMonth, monthYear, rangeDays, startOfMonth, startOfWeek, todayISO } from '../utils/date';
 import { procColor } from './ApptRow';
 
 export function MonthView({
-  anchor, appts, procs, selected, onSelect,
-}: { anchor: string; appts: Appointment[]; procs: Procedure[]; selected: string; onSelect: (d: string) => void }) {
+  anchor, appts, procs, selected, onSelect, tall,
+}: { anchor: string; appts: Appointment[]; procs: Procedure[]; selected: string; onSelect: (d: string) => void; tall?: boolean }) {
   const first = startOfWeek(startOfMonth(anchor));
   const last = endOfMonth(anchor);
   const weeks = Math.ceil((rangeDays(first, last).length) / 7);
@@ -28,7 +28,7 @@ export function MonthView({
           const sel = d === selected;
           return (
             <Pressable key={d} style={st.cellWrap} onPress={() => onSelect(d)} accessibilityLabel={`${dayNum(d)}, ${t.apptCount(list.length)}`}>
-              <View style={[st.cell, sel && { backgroundColor: colors.primarySoft, borderColor: colors.primary }, !inMonth && { opacity: 0.4 }]}>
+              <View style={[st.cell, tall && { height: 92 }, sel && { backgroundColor: colors.primarySoft, borderColor: colors.primary }, !inMonth && { opacity: 0.4 }]}>
                 <View style={[st.num, d === today && { backgroundColor: colors.primary }]}>
                   <Text style={[st.numText, d === today && { color: '#fff' }]}>{dayNum(d)}</Text>
                 </View>
@@ -46,8 +46,8 @@ export function MonthView({
 }
 
 export function YearView({
-  year, appts, usePrices, onMonth,
-}: { year: string; appts: Appointment[]; usePrices: boolean; onMonth: (iso: string) => void }) {
+  year, appts, usePrices, onMonth, cols = 2,
+}: { year: string; appts: Appointment[]; usePrices: boolean; onMonth: (iso: string) => void; cols?: number }) {
   const live = appts.filter((a) => a.status !== 'anulat' && a.date.startsWith(year.slice(0, 4)));
   const counts = Array.from({ length: 12 }, () => 0);
   const sums = Array.from({ length: 12 }, () => 0);
@@ -59,7 +59,7 @@ export function YearView({
       {counts.map((c, m) => {
         const iso = `${year.slice(0, 4)}-${String(m + 1).padStart(2, '0')}-01`;
         return (
-          <Pressable key={m} style={[st.yWrap]} onPress={() => onMonth(iso)} accessibilityLabel={`${monthYear(iso)}, ${t.apptCount(c)}`}>
+          <Pressable key={m} style={[st.yWrap, { width: `${100 / cols}%` }]} onPress={() => onMonth(iso)} accessibilityLabel={`${monthYear(iso)}, ${t.apptCount(c)}`}>
             <View style={[st.yCard, iso.slice(0, 7) === thisMonth && { borderColor: colors.primary, borderWidth: 2 }]}>
               <Text style={st.yMonth}>{t.months[m]}</Text>
               <Text style={st.yCount}>{c}</Text>
@@ -75,22 +75,22 @@ export function YearView({
 }
 
 const st = StyleSheet.create({
-  dow: { flex: 1, textAlign: 'center', color: colors.muted, fontWeight: '700', fontSize: 13 },
+  dow: { flex: 1, textAlign: 'center', color: colors.muted, ...font.w700, fontSize: 13 },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cellWrap: { width: `${100 / 7}%`, padding: 2 },
-  cell: { height: 62, borderRadius: radius.sm, borderWidth: 1.5, borderColor: 'transparent', backgroundColor: colors.card, alignItems: 'center', paddingTop: 5 },
+  cell: { height: 62, borderRadius: 14, borderWidth: 1.5, borderColor: '#F2EAEC', backgroundColor: colors.card, alignItems: 'center', paddingTop: 5 },
   num: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  numText: { fontSize: 15, fontWeight: '700', color: colors.ink },
+  numText: { fontSize: 15, ...font.w700, color: colors.ink },
   dots: { flexDirection: 'row', gap: 3, marginTop: 5, height: 8 },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  more: { fontSize: 10, fontWeight: '700', color: colors.muted },
+  more: { fontSize: 10, ...font.w700, color: colors.muted },
   yGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   yWrap: { width: '50%', padding: 6 },
-  yCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, borderWidth: 1.5, borderColor: 'transparent', ...shadow, shadowOpacity: 0.07 },
-  yMonth: { fontSize: 15, fontWeight: '700', color: colors.muted, textTransform: 'capitalize' },
-  yCount: { fontSize: 34, fontWeight: '800', color: colors.ink, marginTop: 2 },
-  yLbl: { fontSize: 13, color: colors.muted },
+  yCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: 16, borderWidth: 1.5, borderColor: '#F2EAEC', ...shadow, shadowOpacity: 0.07 },
+  yMonth: { fontSize: 15, ...font.w700, color: colors.muted, textTransform: 'capitalize' },
+  yCount: { fontSize: 34, ...font.display, color: colors.ink, marginTop: 2 },
+  yLbl: { fontSize: 13, color: colors.muted, ...font.reg },
   yTrack: { height: 6, backgroundColor: colors.primarySoft, borderRadius: 3, marginTop: 8, overflow: 'hidden' },
   yFill: { height: 6, backgroundColor: colors.primary, borderRadius: 3 },
-  ySum: { fontSize: 14, fontWeight: '800', color: colors.primaryDark, marginTop: 8 },
+  ySum: { fontSize: 14, ...font.w800, color: colors.primaryDark, marginTop: 8 },
 });

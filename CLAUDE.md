@@ -16,7 +16,8 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - `src/services/` — notificări, calendar telefon (+ link Google Calendar), Excel (export/import), `sync.ts` (client sincronizare)
 - `apps-script/Code.gs` — server de sincronizare (Google Sheet); `docs/SINCRONIZARE.md` — ghid
 - `public/` — PWA (manifest, service worker, iconițe); `.github/workflows/pages.yml` — publicare web
-- `src/components/`, `src/screens/` — UI
+- `src/components/`, `src/screens/` — UI; `src/components/ui.tsx` are piesele comune (Hero, Section, Sheet, Segmented, `useWide`)
+- `src/theme.ts` — culori, degradeuri, fonturi (Playfair Display titluri, Manrope text; încărcate în `App.tsx`)
 
 ## Reguli
 - Reguli generale: dev-framework GLOBAL_RULES.
@@ -28,3 +29,6 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - Cea mai recentă `updatedAt` câștigă la sincronizare; orice modificare de programare setează `updatedAt`.
 - `EXPO_BASE_URL` se setează doar în CI (GitHub Pages); local rămâne gol.
 - Data = `YYYY-MM-DD`, ora = `HH:mm` (fără fusuri orare, ca să nu se „mute” programările).
+- Textele folosesc fonturile din `font.*` (theme), nu `fontWeight`.
+- Ecran lat (≥ 960 px, `useWide()`): bară laterală + panou „Azi”; pe telefon: bară de jos plutitoare.
+- Notificări: `settings.notifyVia` = `app` (notificări locale) | `device` (calendarul telefonului ales) | `google` (Apps Script → Google Calendar, setare comună în Config!D1). Doar una activă, ca să nu apară dublat.

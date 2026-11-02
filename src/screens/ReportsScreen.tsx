@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useApp } from '../store/AppContext';
-import { colors } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, font, gradients, shadow } from '../theme';
 import { t } from '../i18n';
 import {
   addDays, addMonths, addYears, cap, endOfMonth, endOfYear, monthYear, shortDate, startOfMonth, startOfWeek, startOfYear, todayISO, longDate,
 } from '../utils/date';
-import { Btn, Card, Chip, IconBtn, Row } from '../components/ui';
+import { Btn, Card, Hero, IconBtn, Row, Segmented, useWide } from '../components/ui';
 import { DatePicker } from '../components/DatePicker';
 
 type Kind = 'azi' | 'saptamana' | 'luna' | 'an' | 'custom';
@@ -14,6 +15,7 @@ const KINDS: Kind[] = ['azi', 'saptamana', 'luna', 'an', 'custom'];
 
 export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
   const { appointments, procedures, settings } = useApp();
+  const wide = useWide();
   const [kind, setKind] = useState<Kind>('luna');
   const [anchor, setAnchor] = useState(todayISO());
   const [from, setFrom] = useState(startOfMonth(todayISO()));
@@ -55,11 +57,13 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
   const fmt = (n: number) => (Math.round(n * 100) / 100).toLocaleString('ro-RO');
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-      <Text style={st.h1}>{t.reports.title}</Text>
-      <Row style={{ flexWrap: 'wrap' }}>
-        {KINDS.map((k) => <Chip key={k} small label={t.reports.periods[k]} active={kind === k} onPress={() => { setKind(k); setAnchor(todayISO()); }} />)}
-      </Row>
+    <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <Hero title={t.reports.title} subtitle={t.reports.subtitle}>
+        <View style={{ marginTop: 16 }}>
+          <Segmented dark items={KINDS.map((k) => ({ key: k, label: t.reports.periods[k] }))} value={kind} onChange={(k) => { setKind(k); setAnchor(todayISO()); }} />
+        </View>
+      </Hero>
+      <View style={[{ padding: 16 }, wide && { paddingHorizontal: 24, maxWidth: 980, width: '100%', alignSelf: 'center' }]}>
 
       {kind === 'custom' ? (
         <Row style={{ gap: 10, marginBottom: 12 }}>
@@ -75,11 +79,11 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
       )}
 
       {settings.usePrices ? (
-        <Card style={st.hero}>
+        <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.hero}>
           <Text style={st.heroLbl}>{t.reports.total}</Text>
           <Text style={st.heroVal}>{fmt(total)} <Text style={st.heroUnit}>{t.lei}</Text></Text>
           <Text style={st.heroSub}>{priced.length} {t.reports.withPrice}</Text>
-        </Card>
+        </LinearGradient>
       ) : (
         <Card style={{ backgroundColor: colors.primarySoft }}>
           <Text style={st.offTitle}>{t.reports.pricesOffTitle}</Text>
@@ -119,30 +123,31 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
           if (picker === 'from') { setFrom(d); if (d > to) setTo(d); } else { setTo(d); if (d < from) setFrom(d); }
         }}
       />
+      </View>
     </ScrollView>
   );
 }
 
 const st = StyleSheet.create({
-  h1: { fontSize: 30, fontWeight: '800', color: colors.ink, marginBottom: 12 },
-  period: { fontSize: 19, fontWeight: '800', color: colors.ink },
+  h1: { fontSize: 30, ...font.w800, color: colors.ink, marginBottom: 12 },
+  period: { fontSize: 19, ...font.w800, color: colors.ink },
   dateBtn: { flex: 1, backgroundColor: colors.card, borderRadius: 14, padding: 10, borderWidth: 1.5, borderColor: colors.line },
-  dLbl: { fontSize: 12, color: colors.muted, fontWeight: '700', textTransform: 'uppercase' },
-  dVal: { fontSize: 16, color: colors.ink, fontWeight: '700', marginTop: 2 },
-  hero: { backgroundColor: colors.primary, paddingVertical: 22 },
-  heroLbl: { color: '#FFD9E6', fontSize: 15, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
-  heroVal: { color: '#fff', fontSize: 44, fontWeight: '800', marginTop: 4 },
-  heroUnit: { fontSize: 22, fontWeight: '700' },
-  heroSub: { color: '#FFD9E6', marginTop: 4, fontSize: 15 },
-  offTitle: { fontSize: 18, fontWeight: '800', color: colors.primaryDark },
-  offBody: { fontSize: 15, color: colors.ink, marginTop: 4 },
-  kLbl: { fontSize: 13, color: colors.muted, fontWeight: '700', textTransform: 'uppercase' },
-  kVal: { fontSize: 30, fontWeight: '800', color: colors.ink, marginTop: 4 },
-  sec: { fontSize: 15, fontWeight: '800', color: colors.muted, textTransform: 'uppercase', marginTop: 22, marginBottom: 8, letterSpacing: 0.6 },
-  none: { color: colors.muted, fontSize: 16 },
-  pName: { fontSize: 16, fontWeight: '700', color: colors.ink, flex: 1 },
-  pVal: { fontSize: 15, fontWeight: '700', color: colors.primaryDark },
+  dLbl: { fontSize: 12, color: colors.muted, ...font.w700, textTransform: 'uppercase' },
+  dVal: { fontSize: 16, color: colors.ink, ...font.w700, marginTop: 2 },
+  hero: { borderRadius: 24, padding: 22, ...shadow, shadowOpacity: 0.2 },
+  heroLbl: { color: colors.gold, fontSize: 15, ...font.w700, textTransform: 'uppercase', letterSpacing: 0.6 },
+  heroVal: { color: '#fff', fontSize: 46, ...font.display, marginTop: 4 },
+  heroUnit: { fontSize: 22, ...font.w700 },
+  heroSub: { color: '#FFD9E6', marginTop: 4, fontSize: 15, ...font.reg },
+  offTitle: { fontSize: 18, ...font.w800, color: colors.primaryDark },
+  offBody: { fontSize: 15, color: colors.ink, marginTop: 4, ...font.reg },
+  kLbl: { fontSize: 13, color: colors.muted, ...font.w700, textTransform: 'uppercase' },
+  kVal: { fontSize: 32, ...font.display, color: colors.ink, marginTop: 4 },
+  sec: { fontSize: 15, ...font.w800, color: colors.muted, textTransform: 'uppercase', marginTop: 22, marginBottom: 8, letterSpacing: 0.6 },
+  none: { color: colors.muted, fontSize: 16, ...font.reg },
+  pName: { fontSize: 16, ...font.w700, color: colors.ink, flex: 1 },
+  pVal: { fontSize: 15, ...font.w700, color: colors.primaryDark },
   track: { height: 8, borderRadius: 4, backgroundColor: '#F3ECEF', marginTop: 8, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
-  note: { color: colors.muted, fontSize: 13, marginTop: 14, lineHeight: 19 },
+  note: { color: colors.muted, fontSize: 13, marginTop: 14, lineHeight: 19, ...font.reg },
 });

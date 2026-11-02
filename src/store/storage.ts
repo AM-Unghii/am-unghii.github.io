@@ -15,7 +15,8 @@ export const defaultProcedures: Procedure[] = [
 export const defaultSettings: Settings = {
   usePrices: false,
   reminderMinutes: 60,
-  syncDeviceCalendar: false,
+  notifyVia: 'app',
+  googleCal: { on: false, calendarId: '', email: false, reminder: 60, updatedAt: '' },
   defaultView: 'saptamana',
   dayStartHour: 8,
   dayEndHour: 20,
@@ -34,6 +35,15 @@ export function emptyData(): AppData {
   };
 }
 
+function normalizeSettings(raw: any): Settings {
+  const s = { ...defaultSettings, ...(raw || {}) };
+  // versiunea veche avea doar „syncDeviceCalendar”
+  if (!raw?.notifyVia) s.notifyVia = raw?.syncDeviceCalendar ? 'device' : 'app';
+  delete (s as any).syncDeviceCalendar;
+  s.googleCal = { ...defaultSettings.googleCal, ...(raw?.googleCal || {}) };
+  return s;
+}
+
 function normalize(raw: any): AppData | null {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.appointments)) return null;
   return {
@@ -42,7 +52,7 @@ function normalize(raw: any): AppData | null {
     procedures: Array.isArray(raw.procedures) && raw.procedures.length ? raw.procedures : defaultProcedures,
     proceduresUpdatedAt: raw.proceduresUpdatedAt || '1970-01-01T00:00:00.000Z',
     sync: raw.sync || undefined,
-    settings: { ...defaultSettings, ...(raw.settings || {}) },
+    settings: normalizeSettings(raw.settings),
     savedAt: raw.savedAt || new Date().toISOString(),
   };
 }

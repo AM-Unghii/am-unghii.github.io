@@ -5,7 +5,7 @@ import { Btn, Chip, Input, Label, Row, Sheet } from './ui';
 import { DatePicker } from './DatePicker';
 import { useApp } from '../store/AppContext';
 import { Appointment } from '../types';
-import { colors, radius } from '../theme';
+import { colors, radius, font } from '../theme';
 import { t } from '../i18n';
 import { endTime, longDate, toMin, todayISO } from '../utils/date';
 import { openGoogleCalendar } from '../services/calendar';
@@ -185,12 +185,12 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
 }
 
 const st = StyleSheet.create({
-  err: { color: colors.danger, marginTop: 6, fontWeight: '600', fontSize: 15 },
+  err: { color: colors.danger, marginTop: 6, ...font.w600, fontSize: 15 },
   dateBtn: {
     minHeight: 54, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.line, backgroundColor: '#fff',
     paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12,
   },
-  dateText: { flex: 1, fontSize: 17, fontWeight: '600', color: colors.ink },
+  dateText: { flex: 1, fontSize: 17, ...font.w600, color: colors.ink },
   warn: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.warnSoft, padding: 12, borderRadius: radius.md, marginTop: 10 },
-  warnText: { flex: 1, color: '#7A5600', fontWeight: '600', fontSize: 14 },
+  warnText: { flex: 1, color: '#7A5600', ...font.w600, fontSize: 14 },
 });

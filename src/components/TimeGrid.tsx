@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Appointment, Procedure } from '../types';
-import { colors, tint } from '../theme';
+import { colors, tint, font } from '../theme';
 import { t } from '../i18n';
 import { dayNum, dowIndex, toMin, todayISO } from '../utils/date';
 import { procColor } from './ApptRow';
 
-const HOUR_H = 64;
+const HOUR_H_BASE = 64;
 const GUTTER = 42;
 
 interface Placed { a: Appointment; lane: number; lanes: number }
@@ -36,11 +36,12 @@ function place(list: Appointment[]): Placed[] {
 }
 
 export function TimeGrid({
-  days, appts, procs, startHour, endHour, onAppt, onSlot,
+  days, appts, procs, startHour, endHour, onAppt, onSlot, tall,
 }: {
   days: string[]; appts: Appointment[]; procs: Procedure[]; startHour: number; endHour: number;
-  onAppt: (a: Appointment) => void; onSlot: (date: string, time: string) => void;
+  onAppt: (a: Appointment) => void; onSlot: (date: string, time: string) => void; tall?: boolean;
 }) {
+  const HOUR_H = tall ? 76 : HOUR_H_BASE;
   const today = todayISO();
   const visible = useMemo(() => appts.filter((a) => a.status !== 'anulat'), [appts]);
 
@@ -51,7 +52,7 @@ export function TimeGrid({
     hi = Math.max(hi, Math.ceil((toMin(a.time) + a.durationMin) / 60));
   }
   const hours = Array.from({ length: Math.max(1, hi - lo) }, (_, i) => lo + i);
-  const narrow = days.length > 3;
+  const narrow = days.length > 3 && !tall;
   const now = new Date();
   const nowTop = ((now.getHours() * 60 + now.getMinutes()) / 60 - lo) * HOUR_H;
 
@@ -86,7 +87,7 @@ export function TimeGrid({
                   <Pressable
                     key={h}
                     onPress={() => onSlot(d, `${String(h).padStart(2, '0')}:00`)}
-                    style={st.slot}
+                    style={({ hovered }: any) => [st.slot, { height: HOUR_H }, hovered && { backgroundColor: tint(colors.primary, 0.05) }]}
                     accessibilityLabel={`Adaugă la ${h}:00`}
                   />
                 ))}
@@ -103,7 +104,7 @@ export function TimeGrid({
                         st.block,
                         {
                           top, height: h, left: `${(lane / lanes) * 100}%`, width: `${100 / lanes}%`,
-                          backgroundColor: a.status === 'finalizat' ? tint(c, 0.28) : tint(c, 0.18), borderLeftColor: c,
+                          backgroundColor: a.status === 'finalizat' ? tint(c, 0.26) : tint(c, 0.14), borderLeftColor: c,
                         },
                       ]}
                     >
@@ -132,16 +133,16 @@ export function TimeGrid({
 const st = StyleSheet.create({
   headRow: { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line },
   headCell: { flex: 1, alignItems: 'center' },
-  dow: { fontSize: 12, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
-  dnumWrap: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  dnum: { fontSize: 17, fontWeight: '800', color: colors.ink },
-  hourLabel: { position: 'absolute', right: 6, fontSize: 11, color: colors.muted, fontWeight: '600' },
+  dow: { fontSize: 12, ...font.w700, color: colors.muted, textTransform: 'uppercase' },
+  dnumWrap: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  dnum: { fontSize: 17, ...font.w800, color: colors.ink },
+  hourLabel: { position: 'absolute', right: 6, fontSize: 11, color: colors.muted, ...font.w600 },
   col: { flex: 1, borderLeftWidth: 1, borderLeftColor: colors.line },
-  slot: { height: HOUR_H, borderTopWidth: 1, borderTopColor: colors.line },
-  block: { position: 'absolute', borderRadius: 8, borderLeftWidth: 4, paddingHorizontal: 5, paddingVertical: 3, overflow: 'hidden', borderWidth: 0.5, borderColor: 'rgba(0,0,0,0.04)' },
-  bName: { fontSize: 14, fontWeight: '800', color: colors.ink },
-  bSub: { fontSize: 12, color: '#5E5264', marginTop: 1 },
-  bSubN: { fontSize: 10, color: '#5E5264' },
+  slot: { borderTopWidth: 1, borderTopColor: '#F3ECEE' },
+  block: { position: 'absolute', borderRadius: 10, borderLeftWidth: 3, paddingHorizontal: 5, paddingVertical: 3, overflow: 'hidden', borderWidth: 0.5, borderColor: 'rgba(0,0,0,0.04)' },
+  bName: { fontSize: 14, ...font.w800, color: colors.ink },
+  bSub: { fontSize: 12, color: '#5E5264', marginTop: 1, ...font.reg },
+  bSubN: { fontSize: 10, color: '#5E5264', ...font.reg },
   nowLine: { position: 'absolute', left: 0, right: 0, height: 2, backgroundColor: colors.danger },
   nowDot: { position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger },
 });
