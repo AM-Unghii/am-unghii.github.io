@@ -11,7 +11,10 @@ Aplicație simplă și modernă pentru programări la manichiură și pedichiur�
 - **Nu se pierd datele**: salvare automată la fiecare modificare, cu copie de siguranță; **export/import Excel**.
 - Avertizare dacă două programări se suprapun.
 
-## Rulare
+## Rulare (Windows, cel mai simplu)
+Dublu-click pe `PORNESTE.bat` — instalează tot ce trebuie și îți dă un meniu (browser / telefon / APK).
+
+## Rulare manuală
 ```bash
 npm install
 npm run web        # în browser
