@@ -1,9 +1,13 @@
-import { Appointment, Procedure, SyncState } from '../types';
+import { Appointment, GoogleCalSettings, Procedure, SyncState } from '../types';
 
 export interface ServerReply {
   serverTime: number;
   appointments: Appointment[];
   procedures: { list: Procedure[]; updatedAt: string };
+  /** setarea Google Calendar păstrată în Sheet (lipsește la scripturile vechi) */
+  calendar?: GoogleCalSettings;
+  /** eroare la scrierea în Google Calendar (ex. script neautorizat pentru calendar) */
+  calendarError?: string;
 }
 
 export class SyncError extends Error {
@@ -21,6 +25,7 @@ export async function callServer(
   sc: Pick<SyncState, 'url' | 'key' | 'lastPull'>,
   outgoing: Appointment[],
   procedures: { list: Procedure[]; updatedAt: string },
+  extra?: { calendar?: GoogleCalSettings; test?: boolean },
 ): Promise<ServerReply> {
   if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(sc.url)) throw new SyncError('adresa');
   const ctl = new AbortController();
@@ -30,7 +35,7 @@ export async function callServer(
     const res = await fetch(sc.url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // fără preflight CORS
-      body: JSON.stringify({ key: sc.key, since: sc.lastPull, appointments: outgoing, procedures }),
+      body: JSON.stringify({ key: sc.key, since: sc.lastPull, appointments: outgoing, procedures, ...(extra || {}) }),
       signal: ctl.signal,
     });
     text = await res.text();

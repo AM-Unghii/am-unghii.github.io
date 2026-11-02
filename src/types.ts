@@ -33,11 +33,28 @@ export interface Appointment {
 
 export type ViewMode = 'zi' | '3zile' | 'saptamana' | 'luna' | 'an' | 'custom';
 
+/** Unde se creează notificările: aplicația, calendarul telefonului sau Google Calendar prin scriptul de sincronizare */
+export type NotifyVia = 'app' | 'device' | 'google';
+
+/** Setarea pentru Google Calendar, comună tuturor dispozitivelor (se păstrează și în Google Sheet) */
+export interface GoogleCalSettings {
+  on: boolean;
+  /** e-mailul / id-ul calendarului; gol = calendarul principal al contului scriptului */
+  calendarId: string;
+  /** trimite și e-mail înainte de programare */
+  email: boolean;
+  reminder: number | null;
+  updatedAt: string;
+}
+
 export interface Settings {
   usePrices: boolean;
   /** minute înainte de programare; null = fără memento */
   reminderMinutes: number | null;
-  syncDeviceCalendar: boolean;
+  notifyVia: NotifyVia;
+  /** calendarul din telefon ales (gol = automat) */
+  deviceCalendarId?: string;
+  googleCal: GoogleCalSettings;
   defaultView: ViewMode;
   dayStartHour: number;
   dayEndHour: number;

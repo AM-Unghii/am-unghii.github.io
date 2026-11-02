@@ -2,11 +2,12 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { AppState } from 'react-native';
 import { AppData, Appointment, Procedure, Settings } from '../types';
 import { emptyData, loadData, saveData } from './storage';
-import { rescheduleReminders } from '../services/notifications';
-import { removeEvent, syncEvent } from '../services/calendar';
+import { rescheduleReminders, sendTestNotification } from '../services/notifications';
+import { createTestEvent, removeEvent, syncEvent } from '../services/calendar';
 import { callServer, mergeAppointments, splitCode, SyncError } from '../services/sync';
 import { t } from '../i18n';
-import { uid } from '../utils/date';
+import { todayISO, uid } from '../utils/date';
+import { Platform } from 'react-native';
 
 export type ApptInput = Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'calendarEventId' | 'deleted'> & {
   id?: string;
@@ -35,10 +36,21 @@ interface Ctx {
   syncNow: () => Promise<void>;
   connectSync: (url: string, key: string) => Promise<string | null>;
   disconnectSync: () => void;
+  /** eroare la Google Calendar raportată de script */
+  calendarError: string;
+  /** trimite o notificare de test pe calea aleasă; întoarce mesajul pentru utilizator */
+  sendTest: () => Promise<string>;
 }
 
 const AppCtx = createContext<Ctx>(null as unknown as Ctx);
 export const useApp = () => useContext(AppCtx);
+
+/** Preia setarea Google Calendar din Sheet dacă e mai nouă decât cea locală. */
+function adoptGoogleCal(s: Settings, remote?: Settings['googleCal']): Settings {
+  if (!remote || !remote.updatedAt || remote.updatedAt <= s.googleCal.updatedAt) return s;
+  const notifyVia = remote.on ? 'google' : s.notifyVia === 'google' ? 'app' : s.notifyVia;
+  return { ...s, googleCal: remote, notifyVia, reminderMinutes: remote.on ? remote.reminder : s.reminderMinutes };
+}
 
 const errText = (e: unknown) => {
   const c = e instanceof SyncError ? e.code : 'altceva';
@@ -51,6 +63,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [savedAt, setSavedAt] = useState('');
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('off');
   const [syncError, setSyncError] = useState('');
+  const [calendarError, setCalendarError] = useState('');
   const ref = useRef(data);
   ref.current = data;
   const syncing = useRef(false);
@@ -87,7 +100,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const startedAt = new Date().toISOString();
       const outgoing = start.appointments.filter((a) => a.updatedAt > sc.lastPush).map(({ calendarEventId, ...rest }) => rest as Appointment);
       const procs = { list: start.procedures, updatedAt: start.proceduresUpdatedAt };
-      const res = await callServer(sc, outgoing, procs);
+      const res = await callServer(sc, outgoing, procs, { calendar: start.settings.googleCal });
+      setCalendarError(res.calendarError || '');
 
       const cur = ref.current;
       const merged = mergeAppointments(cur.appointments, res.appointments);
@@ -99,17 +113,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           appointments: m.list,
           procedures: useProcs ? res.procedures.list : d.procedures,
           proceduresUpdatedAt: useProcs ? res.procedures.updatedAt : d.proceduresUpdatedAt,
+          settings: adoptGoogleCal(d.settings, res.calendar),
           sync: d.sync ? { ...d.sync, lastPull: res.serverTime, lastPush: startedAt, lastSyncAt: new Date().toISOString() } : d.sync,
         };
       });
 
       // calendarul telefonului: aplică modificările venite de pe alte dispozitive
-      if (cur.settings.syncDeviceCalendar) {
+      if (cur.settings.notifyVia === 'device') {
         for (const a of merged.changed) {
           const local = cur.appointments.find((x) => x.id === a.id);
-          if (a.deleted) await removeEvent(local?.calendarEventId);
+          if (a.deleted) await removeEvent({ ...a, calendarEventId: local?.calendarEventId });
           else {
-            const id = await syncEvent({ ...a, calendarEventId: local?.calendarEventId }, cur.settings.reminderMinutes);
+            const id = await syncEvent({ ...a, calendarEventId: local?.calendarEventId }, cur.settings.reminderMinutes, cur.settings.deviceCalendarId);
             if (id !== local?.calendarEventId) setData((d) => ({ ...d, appointments: d.appointments.map((x) => (x.id === a.id ? { ...x, calendarEventId: id } : x)) }));
           }
         }
@@ -185,8 +200,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     patchAppt(a); // salvat imediat; calendarul se sincronizează după
     scheduleSync();
     const s = ref.current.settings;
-    if (s.syncDeviceCalendar) {
-      const eventId = await syncEvent(a, s.reminderMinutes);
+    if (s.notifyVia === 'device') {
+      const eventId = await syncEvent(a, s.reminderMinutes, s.deviceCalendarId);
       if (eventId !== a.calendarEventId) {
         a = { ...a, calendarEventId: eventId };
         patchAppt(a);
@@ -204,11 +219,69 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!old) return;
     patchAppt({ ...old, deleted: true, calendarEventId: undefined, updatedAt: new Date().toISOString() });
     scheduleSync();
-    if (old.calendarEventId) await removeEvent(old.calendarEventId);
+    // scoate și evenimentul (cu alarma lui) din calendarul telefonului
+    if (old.calendarEventId || ref.current.settings.notifyVia === 'device') await removeEvent(old);
   }, [patchAppt, scheduleSync]);
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
-    setData((d) => ({ ...d, settings: { ...d.settings, ...patch } }));
+    const prev = ref.current.settings;
+    let next: Settings = { ...prev, ...patch };
+    // setarea Google Calendar e comună tuturor dispozitivelor → o marcăm ca modificată ca să ajungă în Sheet
+    const gOn = next.notifyVia === 'google';
+    if (gOn !== prev.googleCal.on || (gOn && next.reminderMinutes !== prev.reminderMinutes) || patch.googleCal) {
+      next = { ...next, googleCal: { ...next.googleCal, on: gOn, reminder: next.reminderMinutes, updatedAt: new Date().toISOString() } };
+      setTimeout(() => scheduleSync(), 0);
+    }
+    setData((d) => ({ ...d, settings: next }));
+  }, [scheduleSync]);
+
+  // calendarul telefonului: la schimbarea căii, a calendarului sau a memento-ului refacem evenimentele viitoare
+  const calKey = `${data.settings.notifyVia}|${data.settings.deviceCalendarId || ''}|${data.settings.reminderMinutes}`;
+  const prevCal = useRef<{ key: string; via: string } | null>(null);
+  useEffect(() => {
+    if (!loaded || Platform.OS === 'web') return;
+    const prev = prevCal.current;
+    prevCal.current = { key: calKey, via: data.settings.notifyVia };
+    if (!prev || prev.key === calKey) return;
+    (async () => {
+      const d = ref.current;
+      const today = todayISO();
+      const ids = new Map<string, string | undefined>();
+      for (const a of d.appointments) {
+        if (a.deleted) continue;
+        if (d.settings.notifyVia === 'device') {
+          if (a.date < today || a.status !== 'programat') continue;
+          ids.set(a.id, await syncEvent(a, d.settings.reminderMinutes, d.settings.deviceCalendarId));
+        } else if (prev.via === 'device' && a.calendarEventId) {
+          await removeEvent(a);
+          ids.set(a.id, undefined);
+        }
+      }
+      if (ids.size) setData((x) => ({ ...x, appointments: x.appointments.map((a) => (ids.has(a.id) ? { ...a, calendarEventId: ids.get(a.id) } : a)) }));
+    })();
+  }, [loaded, calKey]);
+
+  const sendTest = useCallback(async (): Promise<string> => {
+    const d = ref.current;
+    const via = d.settings.notifyVia;
+    if (via === 'google') {
+      if (!d.sync) return t.settings.needSync;
+      try {
+        const res = await callServer({ ...d.sync, lastPull: Date.now() + 1e10 }, [], { list: [], updatedAt: '' }, { calendar: d.settings.googleCal, test: true });
+        if (res.calendarError) return res.calendarError;
+        if (!res.calendar) return t.settings.googleNeedsUpdate;
+        return t.settings.testSentGoogle;
+      } catch (e) {
+        return errText(e);
+      }
+    }
+    if (via === 'device' && Platform.OS !== 'web') {
+      const name = await createTestEvent(d.settings.deviceCalendarId);
+      return name === null ? t.settings.calendarDenied : t.settings.testSentDevice(name);
+    }
+    const r = await sendTestNotification();
+    if (r === 'denied') return t.settings.notifDenied;
+    return Platform.OS === 'web' ? `${t.settings.testWeb}\n${t.settings.webNotif}` : t.settings.testSentApp;
   }, []);
 
   const touchProcs = (d: AppData, procedures: Procedure[]): AppData => ({ ...d, procedures, proceduresUpdatedAt: new Date().toISOString() });
@@ -267,9 +340,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       syncNow,
       connectSync,
       disconnectSync,
+      calendarError,
+      sendTest,
     }),
     [loaded, live, data.procedures, data.settings, data.sync?.lastSyncAt, connected, savedAt, syncStatus, syncError,
-      saveAppointment, setStatus, deleteAppointment, updateSettings, saveProcedure, deleteProcedure, importAppointments, syncNow, connectSync, disconnectSync],
+      saveAppointment, setStatus, deleteAppointment, updateSettings, saveProcedure, deleteProcedure, importAppointments, syncNow, connectSync, disconnectSync, calendarError, sendTest],
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
