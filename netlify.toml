@@ -1,0 +1,12 @@
+# Publicare pe Netlify (adresă proprie, separată de alte aplicații de pe github.io)
+[build]
+  command = "npx expo export --platform web"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
