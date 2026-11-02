@@ -146,7 +146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       await callServer({ url, key, lastPull: Date.now() + 1e10 }, [], { list: [], updatedAt: '' }); // doar test
     } catch (e) {
-      return e instanceof SyncError && e.code === 'retea' ? t.sync.errConnect : errText(e);
+      return e instanceof SyncError && e.code === 'retea' ? `${t.sync.errConnect}\n(${e.detail || ''})` : e instanceof SyncError && e.code === 'adresa' && e.detail ? `${errText(e)}\n(${e.detail})` : errText(e);
     }
     setData((d) => ({ ...d, sync: { url, key, lastPull: 0, lastPush: '' } }));
     setSyncStatus('idle');

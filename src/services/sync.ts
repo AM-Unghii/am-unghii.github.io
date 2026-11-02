@@ -7,7 +7,7 @@ export interface ServerReply {
 }
 
 export class SyncError extends Error {
-  constructor(public code: 'parola' | 'retea' | 'adresa' | 'altceva', msg?: string) { super(msg || code); }
+  constructor(public code: 'parola' | 'retea' | 'adresa' | 'altceva', msg?: string, public detail?: string) { super(msg || code); }
 }
 
 /** Acceptă și „adresa#parola” lipită într-un singur câmp. */
@@ -34,13 +34,13 @@ export async function callServer(
       signal: ctl.signal,
     });
     text = await res.text();
-  } catch {
-    throw new SyncError('retea');
+  } catch (e) {
+    throw new SyncError('retea', undefined, String(e));
   } finally {
     clearTimeout(timer);
   }
   let j: any;
-  try { j = JSON.parse(text); } catch { throw new SyncError('adresa'); }
+  try { j = JSON.parse(text); } catch { throw new SyncError('adresa', undefined, text.slice(0, 80).replace(/\s+/g, ' ')); }
   if (!j.ok) throw new SyncError(j.error === 'parola' ? 'parola' : 'altceva', String(j.error));
   return j as ServerReply;
 }
