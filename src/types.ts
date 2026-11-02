@@ -41,7 +41,14 @@ export interface Settings {
   defaultView: ViewMode;
   dayStartHour: number;
   dayEndHour: number;
+  /** fundalul iconiței aplicației */
+  logoBg: LogoBg;
+  /** forma iconiței (contează doar cu fundal alb) */
+  logoShape: LogoShape;
 }
+
+export type LogoBg = 'alb' | 'transparent';
+export type LogoShape = 'patrat' | 'rotund';
 
 export interface SyncState {
   url: string;
