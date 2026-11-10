@@ -12,7 +12,7 @@ import { t } from '../i18n';
 import { endTime, longDate, toMin, todayISO } from '../utils/date';
 import { openGoogleCalendar } from '../services/calendar';
 import { priceOn } from '../utils/prices';
-import { apptName, isPersonalProc, overlapping, withPersonalFallback } from '../utils/appts';
+import { apptName, isAllDay, timeSpan, isPersonalProc, overlapping, withPersonalFallback } from '../utils/appts';
 import { apptSub, procColor } from './ApptRow';
 
 export interface SheetTarget {
@@ -174,10 +174,13 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
           <Ionicons name="chevron-down" size={20} color={colors.muted} />
         </Pressable>
 
-        <Label>{t.time}: {time} – {endTime(time, dur)}</Label>
+        <Label>{t.time}: {dur >= 1440 ? t.period.allDay : `${time} – ${endTime(time, dur)}`}</Label>
+        {personal ? <Row style={{ flexWrap: 'wrap', marginBottom: 6 }}>
+          <Chip small label={t.period.allDay} active={dur >= 1440} onPress={() => { if (dur >= 1440) setDur(60); else { setDur(1440); setHour(0); setMinute('00'); } }} />
+        </Row> : null}
         <Row style={{ flexWrap: 'wrap' }}>
           {hours.map((h) => (
-            <Chip key={h} small label={String(h).padStart(2, '0')} active={h === hour} onPress={() => setHour(h)} />
+            <Chip key={h} small label={String(h).padStart(2, '0')} active={h === hour && dur < 1440} onPress={() => { setHour(h); if (dur >= 1440) setDur(60); }} />
           ))}
         </Row>
         <Row style={{ flexWrap: 'wrap', marginTop: 4 }}>
@@ -201,7 +204,7 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
               return (
                 <View key={x.id} style={[st.dayRow, x.personal && st.dayPersonal, hit && { backgroundColor: colors.warnSoft }]}>
                   <View style={[st.dayBar, { backgroundColor: c }]} />
-                  <Text style={st.dayTime}>{x.time}–{endTime(x.time, x.durationMin)}</Text>
+                  <Text style={st.dayTime}>{timeSpan(x, endTime(x.time, x.durationMin))}</Text>
                   {x.personal ? <Ionicons name="person" size={13} color={c} /> : null}
                   <Text style={st.dayName} numberOfLines={1}>{apptName(x)} <Text style={st.daySub}>· {apptSub(x)}</Text></Text>
                 </View>

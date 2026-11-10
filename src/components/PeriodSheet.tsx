@@ -19,21 +19,23 @@ export function PeriodSheet({ visible, date, onClose, onDone }: { visible: boole
   const [h1, setH1] = useState(8);
   const [h2, setH2] = useState(16);
   const [weekdays, setWeekdays] = useState(true);
+  const [allDay, setAllDay] = useState(true);
   const [pick, setPick] = useState<null | 'from' | 'to'>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     const s = startOfWeek(date);
-    setLabel(''); setFrom(s); setTo(addDays(s, 4)); setH1(settings.dayStartHour); setH2(Math.min(settings.dayEndHour, 16)); setWeekdays(true);
+    setLabel(''); setFrom(s); setTo(addDays(s, 4)); setH1(settings.dayStartHour); setH2(Math.min(settings.dayEndHour, 16)); setWeekdays(true); setAllDay(true);
   }, [visible]);
 
   const days = useMemo(
     () => (to < from ? [] : rangeDays(from, to)).filter((d) => !weekdays || (dowIndex(d) !== 0 && dowIndex(d) !== 6)),
     [from, to, weekdays],
   );
-  const dur = Math.max(30, (h2 - h1) * 60);
-  const clashes = days.reduce((n, d) => n + overlapping(appointments.filter((a) => !a.personal), d, hh(h1), dur).length, 0);
+  const dur = allDay ? 1440 : Math.max(30, (h2 - h1) * 60);
+  const startT = allDay ? '00:00' : hh(h1);
+  const clashes = days.reduce((n, d) => n + overlapping(appointments.filter((a) => !a.personal), d, startT, dur).length, 0);
   const thisWeek = startOfWeek(todayISO());
 
   const setWeek = (s: string) => { setFrom(s); setTo(addDays(s, 4)); setWeekdays(true); };
@@ -43,7 +45,7 @@ export function PeriodSheet({ visible, date, onClose, onDone }: { visible: boole
     const proc = withPersonalFallback(procedures).find(isPersonalProc)!;
     for (const d of days) {
       await saveAppointment({
-        clientName: label.trim() || t.period.defaultLabel, date: d, time: hh(h1), durationMin: dur,
+        clientName: label.trim() || t.period.defaultLabel, date: d, time: startT, durationMin: dur,
         procedureId: proc.id, procedureName: proc.name, personal: true, report: false,
       });
     }
@@ -72,10 +74,17 @@ export function PeriodSheet({ visible, date, onClose, onDone }: { visible: boole
           <Text style={st.sw}>{t.period.weekdays}</Text>
           <Switch value={weekdays} onValueChange={setWeekdays} trackColor={{ true: colors.primary, false: '#DDD3DF' }} />
         </Row>
-        <Label>{t.period.from}: {hh(h1)}</Label>
+        <Row style={{ justifyContent: 'space-between', marginTop: 14 }}>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={st.sw}>{t.period.allDay}</Text>
+            <Text style={st.hint}>{t.period.allDayHint}</Text>
+          </View>
+          <Switch value={allDay} onValueChange={setAllDay} trackColor={{ true: colors.primary, false: '#DDD3DF' }} />
+        </Row>
+        {!allDay ? <><Label>{t.period.from}: {hh(h1)}</Label>
         <Row style={{ flexWrap: 'wrap' }}>{hours.slice(0, 16).map((h) => <Chip key={h} small label={String(h).padStart(2, '0')} active={h === h1} onPress={() => { setH1(h); if (h2 <= h) setH2(h + 1); }} />)}</Row>
         <Label>{t.period.until}: {endTime(hh(h1), dur)}</Label>
-        <Row style={{ flexWrap: 'wrap' }}>{hours.filter((h) => h > h1).map((h) => <Chip key={h} small label={String(h).padStart(2, '0')} active={h === h2} onPress={() => setH2(h)} />)}</Row>
+        <Row style={{ flexWrap: 'wrap' }}>{hours.filter((h) => h > h1).map((h) => <Chip key={h} small label={String(h).padStart(2, '0')} active={h === h2} onPress={() => setH2(h)} />)}</Row></> : null}
         <Text style={[st.hint, { marginTop: 12 }]}>{t.period.summary(days.length)}</Text>
         {clashes ? <View style={st.warn}><Text style={st.warnText}>{t.period.clash(clashes)}</Text></View> : null}
         <Btn label={busy ? '…' : t.period.save} icon="checkmark" disabled={busy || !days.length} onPress={save} style={{ marginTop: 20 }} />

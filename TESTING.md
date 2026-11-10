@@ -2,6 +2,10 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.5.2 — toată ziua
+1. Programare nouă → Personală → „Rezervă mai multe zile” → „Toată ziua” pornit, nume „Concediu”, alegi datele (ex. 7 zile, cu „Doar luni–vineri” oprit) → Rezervă: în Săptămână apare banda „Concediu” sus pe fiecare zi.
+2. Programare pentru clientă într-una din zile → avertizare „ai o programare personală”; în „În ziua aceea” scrie „Toată ziua”.
+
 ## 1.5.1 — rezervă o perioadă
 1. Programare nouă → „Personală (a mea)” → „Rezervă mai multe zile…” → „Săptămâna viitoare”, nume „Săptămâna verde” → „Rezervă zilele”: 5 blocuri luni–vineri în calendar.
 2. Programare pentru o clientă în una din zile → avertizare de suprapunere cu „Săptămâna verde”.
@@ -27,6 +31,11 @@
 6. Program (calendar) → apeși pe o programare → jos: aceleași 3 butoane.
 7. Rapoarte → „Anulate” și „Reprogramate” corespund cu cele de mai sus.
 8. Cu sincronizarea: pe al doilea dispozitiv apar mutarea, anularea și ștergerea; Google Calendar: evenimentul se mută / dispare.
+
+## 1.3.4 — istoric în Setări
+1. Setări → „Folosesc prețuri” pornit, fără prețuri → sub comutator: „Încă nu ai trecut prețuri…”.
+2. Pui preț la un serviciu, apoi un preț nou → în „Istoric prețuri (toate serviciile)” apar ambele rânduri, cel nou sus, cu „100 → 120 lei”.
+3. Apeși pe un rând → se deschide serviciul.
 
 ## 1.3.3 — istoric „de la cât la cât”
 1. Setări → serviciu cu preț 100 → Preț nou 120, Valabil de la o dată viitoare → Salvează → redeschizi: rândul de sus arată „100 → 120 lei”, „de la <data> · urmează” și „schimbat pe <azi>”.

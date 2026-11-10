@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 — 2026-11-10
+- Include și „Istoric prețuri pentru toate serviciile” din Setări (descris mai jos la 1.3.4, pus aici pe versiunea curentă) și „Toată ziua” (1.5.2).
+
+## 1.5.2 — 2026-11-10
+- **„Toată ziua”** pentru perioade (săptămâna verde, concediu, școală): în „Rezervă mai multe zile” e pornit implicit și nu mai trebuie oră. În calendar apare ca bandă sus pe fiecare zi, iar la verificarea unei programări contează ca ocupat toată ziua. Poți dezactiva comutatorul ca să alegi ore. Și la o programare personală simplă există butonul „Toată ziua”. Fără schimbări în Code.gs.
+
 ## 1.5.1 — 2026-11-10
 - **Rezervă o perioadă**: la „Programare personală” apare butonul „Rezervă mai multe zile (săptămâna verde, școală…)”. Alegi săptămâna (săptămâna asta / viitoare / peste 2) sau datele de la–până, numele („Săptămâna verde”), orele și dacă doar luni–vineri. Se pune câte o programare personală pe zi (fără cheltuială), vizibilă în calendar și luată în calcul la suprapuneri. Se modifică sau se șterge pe fiecare zi în parte. Fără schimbări în Code.gs față de 1.5.0.
 
@@ -19,6 +25,10 @@
 - Fiecare mutare se ține minte (de unde → unde). Rapoarte: carduri noi „Anulate” și „Reprogramate”.
 - Sincronizare: coloană nouă `reprogramari` în Google Sheet — **trebuie lipit din nou Code.gs și publicată o versiune nouă** (fără asta, lista de mutări nu ajunge pe celelalte dispozitive; restul merge ca înainte). Google Calendar: mutarea mută evenimentul, anularea/ștergerea îl scoate, reactivarea îl recreează (logica existentă). Excel: coloană „Reprogramări”.
 - Teste: vezi PR.
+
+## 1.3.4 — 2026-11-10
+- Setări → „Folosesc prețuri”: istoricul prețurilor pentru toate serviciile, cele mai noi schimbări primele (serviciu, „100 → 120 lei”, de la ce dată, ziua schimbării). Apăsat pe un rând se deschide serviciul. Fără prețuri: explicație unde le pui.
+- Teste: `tsc --noEmit` OK; build web OK; verificat în browser. Netestat pe telefon real.
 
 ## 1.3.3 — 2026-11-10
 - Istoric prețuri mai clar: fiecare rând arată de la cât la cât s-a schimbat (ex. „100 → 120 lei”), de când e valabil și în ce zi l-ai introdus („schimbat pe …”). Prețurile introduse înainte de 1.3.3 nu au ziua schimbării.

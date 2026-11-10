@@ -6,7 +6,7 @@ import { Appointment, ListPrefs } from '../types';
 import { colors, font, radius, shadow, tint } from '../theme';
 import { t } from '../i18n';
 import { dateWithYear, endTime, longDate, todayISO } from '../utils/date';
-import { apptName, defaultListPrefs, filterAppts, isPersonalProc, overlapping, parseTime, rescheduleCount, sortAppts, withPersonalFallback } from '../utils/appts';
+import { apptName, isAllDay, timeSpan, defaultListPrefs, filterAppts, isPersonalProc, overlapping, parseTime, rescheduleCount, sortAppts, withPersonalFallback } from '../utils/appts';
 import { priceOn } from '../utils/prices';
 import { Card, Chip, Hero, Input, Label, Row, useWide } from '../components/ui';
 import { DatePicker } from '../components/DatePicker';
@@ -116,7 +116,7 @@ export function ListScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={[st.name, cancelled && st.cancelled]} numberOfLines={1}>{apptName(a)}</Text>
                     <Text style={st.sub} numberOfLines={1}>{apptSub(a)}{settings.usePrices && a.price !== undefined ? ` · ${a.personal && a.report ? '−' : ''}${a.price} ${t.lei}` : ''}</Text>
-                    <Text style={st.when}>{longDate(a.date)} · {a.time}–{endTime(a.time, a.durationMin)}</Text>
+                    <Text style={st.when}>{longDate(a.date)} · {timeSpan(a, endTime(a.time, a.durationMin))}</Text>
                     <Row style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                       {a.status !== 'programat' ? <View style={[st.badge, a.status === 'finalizat' && { backgroundColor: tint(colors.success, 0.12) }]}><Text style={[st.badgeTxt, a.status === 'finalizat' && { color: colors.success }]}>{t.statuses[a.status]}</Text></View> : null}
                       {moves ? <View style={[st.badge, { backgroundColor: colors.goldSoft }]}><Text style={[st.badgeTxt, { color: '#7A5A22' }]}>{t.rs.movedTimes(moves)}</Text></View> : null}
