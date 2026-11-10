@@ -5,6 +5,8 @@ export interface PricePoint {
   /** YYYY-MM-DD sau gol */
   from: string;
   price: number;
+  /** YYYY-MM-DD: ziua în care a fost introdus prețul (pentru istoric) */
+  changedAt?: string;
 }
 
 export interface Procedure {

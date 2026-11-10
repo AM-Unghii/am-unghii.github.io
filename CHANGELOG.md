@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.3 — 2026-11-10
+- Istoric prețuri mai clar: fiecare rând arată de la cât la cât s-a schimbat (ex. „100 → 120 lei”), de când e valabil și în ce zi l-ai introdus („schimbat pe …”). Prețurile introduse înainte de 1.3.3 nu au ziua schimbării.
+- Teste: `tsc --noEmit` OK; build web OK; verificat în browser. Netestat pe telefon real.
+
 ## 1.3.2 — 2026-11-10
 - Serviciu → câmpul „Valabil de la” apare mereu, și la primul preț al unui serviciu (înainte apărea doar după ce serviciul avea deja un preț).
 - Teste: `tsc --noEmit` OK; build web OK; verificat în browser. Netestat pe telefon real.

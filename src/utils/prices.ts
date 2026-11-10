@@ -20,7 +20,7 @@ export function priceOn(p: Procedure | undefined, date: string): number | undefi
 export function addPrice(p: Procedure, from: string, price: number, today: string): Procedure {
   const h = priceHistory(p);
   // primul preț se aplică și programărilor dinainte de data lui (vezi priceOn)
-  const entry: PricePoint = { from, price };
+  const entry: PricePoint = { from, price, changedAt: today };
   const prices = [...h.filter((x) => x.from !== entry.from), entry].sort((a, b) => a.from.localeCompare(b.from));
   const next = { ...p, prices };
   return { ...next, price: priceOn(next, today) };

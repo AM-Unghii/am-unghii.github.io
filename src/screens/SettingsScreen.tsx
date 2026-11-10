@@ -337,14 +337,19 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
           {history.length ? (
             <>
               <Label>{t.settings.priceHistory}</Label>
-              {[...history].reverse().map((h) => {
+              {history.map((h, i) => ({ h, prev: history[i - 1] })).reverse().map(({ h, prev }) => {
                 const isNow = h.from === currentFrom;
                 return (
                   <View key={h.from || 'mereu'} style={st.histRow}>
-                    <Text style={[st.histPrice, isNow && { color: colors.primaryDark }]}>{h.price} {t.lei}</Text>
-                    <Text style={st.sub}>
-                      {h.from ? t.settings.priceSince(dateWithYear(h.from)) : t.settings.priceAlways}{h.from > today ? ` · ${t.settings.priceUpcoming}` : ''}
+                    <Text style={[st.histPrice, isNow && { color: colors.primaryDark }]}>
+                      {prev && prev.price !== h.price ? `${prev.price} → ` : ''}{h.price} {t.lei}
                     </Text>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={st.sub}>
+                        {h.from ? t.settings.priceSince(dateWithYear(h.from)) : t.settings.priceAlways}{h.from > today ? ` · ${t.settings.priceUpcoming}` : ''}
+                      </Text>
+                      {h.changedAt ? <Text style={st.sub}>{t.settings.priceChangedOn(dateWithYear(h.changedAt))}</Text> : null}
+                    </View>
                   </View>
                 );
               })}

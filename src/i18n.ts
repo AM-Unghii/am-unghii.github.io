@@ -81,6 +81,7 @@ export const t = {
     priceAlways: 'dintotdeauna',
     priceSince: (d: string) => `de la ${d}`,
     priceUpcoming: 'urmează',
+    priceChangedOn: (d: string) => `schimbat pe ${d}`,
     priceHint: 'Programările deja făcute își păstrează prețul, deci rapoartele din trecut nu se schimbă. Prețul nou se folosește pentru programările de la data aleasă.',
     priceNext: (price: number, d: string) => `apoi ${price} lei de la ${d}`,
     repriceTitle: 'Actualizez programările viitoare?',
