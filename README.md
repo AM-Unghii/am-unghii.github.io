@@ -24,7 +24,7 @@ npm start          # scanezi codul QR cu Expo Go (Android/iOS)
 ```
 
 ## Publicare
-- **PWA automat**: la fiecare push pe `main`, GitHub Actions publică web-ul pe GitHub Pages (o singură dată: repo → Settings → Pages → Source: *GitHub Actions*). Adresa: `https://<cont>.github.io/<repo>/`.
+- **PWA automat**: la fiecare push pe `main`, GitHub Actions publică web-ul pe GitHub Pages (o singură dată: repo → Settings → Pages → Source: *GitHub Actions*). Adresa: `https://<cont>.github.io/<repo>/`, sau `https://<cont>.github.io/` dacă repo-ul se numește `<cont>.github.io`. Mai multe PWA pe același telefon: fiecare pe alt `<cont>.github.io` (vezi `docs/INSTALARE.md`).
 - **Web**: `npx expo export --platform web` → încarci folderul `dist/` pe orice hosting (Netlify, Vercel, GitHub Pages, Firebase).
 - **Android/iOS**: `npm i -g eas-cli`, `eas login`, apoi `eas build -p android --profile preview` (APK de test) sau `eas build -p ios`. Pentru App Store e nevoie de cont Apple Developer.
 
