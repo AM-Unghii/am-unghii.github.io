@@ -9,6 +9,7 @@ import { colors, radius, font } from '../theme';
 import { t } from '../i18n';
 import { endTime, longDate, toMin, todayISO } from '../utils/date';
 import { openGoogleCalendar } from '../services/calendar';
+import { priceOn } from '../utils/prices';
 
 export interface SheetTarget {
   /** programare existentă (modificare) */
@@ -41,6 +42,8 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
   const [minute, setMinute] = useState('00');
   const [dur, setDur] = useState(60);
   const [price, setPrice] = useState('');
+  /** ultimul preț completat automat; dacă prețul nu a fost schimbat de mână, îl refacem la schimbarea serviciului/datei */
+  const [autoPrice, setAutoPrice] = useState('');
   const [notes, setNotes] = useState('');
   const [pickDate, setPickDate] = useState(false);
   const [error, setError] = useState('');
@@ -52,13 +55,14 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
     if (a) {
       setName(a.clientName); setPhone(a.phone || ''); setProcId(a.procedureId); setDate(a.date);
       setHour(Number(a.time.slice(0, 2))); setMinute(a.time.slice(3)); setDur(a.durationMin);
-      setPrice(a.price !== undefined ? String(a.price) : ''); setNotes(a.notes || '');
+      setPrice(a.price !== undefined ? String(a.price) : ''); setAutoPrice(a.price !== undefined ? '\u0000' : ''); setNotes(a.notes || '');
     } else {
       const p = procedures[0];
       setName(''); setPhone(''); setProcId(p.id); setDate(target.date || todayISO());
       const tm = target.time || '10:00';
       setHour(Number(tm.slice(0, 2))); setMinute(tm.slice(3)); setDur(p.durationMin);
-      setPrice(''); setNotes('');
+      const auto = settings.usePrices ? priceOn(p, target.date || todayISO()) : undefined;
+      setPrice(auto !== undefined ? String(auto) : ''); setAutoPrice(auto !== undefined ? String(auto) : ''); setNotes('');
     }
   }, [target]);
 
@@ -73,14 +77,22 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
     );
   }, [appointments, date, time, dur, editing]);
 
+  /** prețul serviciului valabil la data programării (doar dacă prețul nu a fost scris de mână) */
+  const refillPrice = (pid: string, d: string) => {
+    if (!settings.usePrices || price !== autoPrice) return;
+    const v = priceOn(procedures.find((x) => x.id === pid), d);
+    const str = v !== undefined ? String(v) : '';
+    setPrice(str); setAutoPrice(str);
+  };
+
   const pickProc = (id: string) => {
     setProcId(id);
     const p = procedures.find((x) => x.id === id);
-    if (p) {
-      setDur(p.durationMin);
-      if (settings.usePrices && p.price !== undefined && !price) setPrice(String(p.price));
-    }
+    if (p) setDur(p.durationMin);
+    refillPrice(id, date);
   };
+
+  const pickDate2 = (d: string) => { setDate(d); refillPrice(procId, d); };
 
   const save = async () => {
     if (!name.trim()) { setError(t.nameRequired); return; }
@@ -179,7 +191,7 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
           </View>
         ) : null}
       </Sheet>
-      <DatePicker visible={pickDate} value={date} onPick={setDate} onClose={() => setPickDate(false)} />
+      <DatePicker visible={pickDate} value={date} onPick={pickDate2} onClose={() => setPickDate(false)} />
     </>
   );
 }

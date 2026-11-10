@@ -1,11 +1,20 @@
 export type Status = 'programat' | 'finalizat' | 'anulat';
 
+/** un preț și data de la care e valabil („” = dintotdeauna) */
+export interface PricePoint {
+  /** YYYY-MM-DD sau gol */
+  from: string;
+  price: number;
+}
+
 export interface Procedure {
   id: string;
   name: string;
   durationMin: number;
-  /** preț implicit (opțional) */
+  /** preț implicit (opțional) = prețul de azi; păstrat pentru compatibilitate (Excel, versiuni vechi) */
   price?: number;
+  /** istoricul prețurilor; programările își păstrează propriul preț, deci schimbarea nu atinge trecutul */
+  prices?: PricePoint[];
   color: string;
 }
 

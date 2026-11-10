@@ -28,6 +28,8 @@ interface Ctx {
   updateSettings: (patch: Partial<Settings>) => void;
   saveProcedure: (p: Procedure) => void;
   deleteProcedure: (id: string) => void;
+  /** pune prețul nou pe programările date (după confirmare) */
+  repriceAppointments: (ids: string[], price: number) => void;
   importAppointments: (list: Appointment[], newProcs: Procedure[]) => { added: number; updated: number };
   syncConnected: boolean;
   syncStatus: SyncStatus;
@@ -296,6 +298,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     scheduleSync();
   }, [scheduleSync]);
 
+  const repriceAppointments = useCallback((ids: string[], price: number) => {
+    if (!ids.length) return;
+    const now = new Date().toISOString();
+    const set = new Set(ids);
+    setData((d) => ({ ...d, appointments: d.appointments.map((a) => (set.has(a.id) ? { ...a, price, updatedAt: now } : a)) }));
+    scheduleSync();
+  }, [scheduleSync]);
+
   const importAppointments = useCallback((list: Appointment[], newProcs: Procedure[]) => {
     let added = 0;
     let updated = 0;
@@ -332,6 +342,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateSettings,
       saveProcedure,
       deleteProcedure,
+      repriceAppointments,
       importAppointments,
       syncConnected: connected,
       syncStatus,
@@ -344,7 +355,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sendTest,
     }),
     [loaded, live, data.procedures, data.settings, data.sync?.lastSyncAt, connected, savedAt, syncStatus, syncError,
-      saveAppointment, setStatus, deleteAppointment, updateSettings, saveProcedure, deleteProcedure, importAppointments, syncNow, connectSync, disconnectSync, calendarError, sendTest],
+      saveAppointment, setStatus, deleteAppointment, updateSettings, saveProcedure, deleteProcedure, repriceAppointments, importAppointments, syncNow, connectSync, disconnectSync, calendarError, sendTest],
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

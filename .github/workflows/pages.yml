@@ -25,6 +25,7 @@ jobs:
       - name: Build web
         env:
           REPO: ${{ github.event.repository.name }}
+          EXPO_PUBLIC_COMMIT: ${{ github.sha }}
         run: |
           case "$REPO" in
             *.github.io) export EXPO_BASE_URL= ;;

@@ -4,7 +4,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Appointment, Procedure, Status } from '../types';
-import { uid } from '../utils/date';
+import { todayISO, uid } from '../utils/date';
+import { priceOn } from '../utils/prices';
 import { procedureColors } from '../theme';
 
 const HEAD = ['Data', 'Ora', 'Durată (min)', 'Nume', 'Telefon', 'Procedură', 'Preț (lei)', 'Status', 'Observații', 'ID'];
@@ -20,7 +21,7 @@ function buildBook(appts: Appointment[], procedures: Procedure[]) {
   ws['!cols'] = [12, 7, 12, 24, 14, 24, 11, 11, 30, 16].map((wch) => ({ wch }));
   const wp = XLSX.utils.aoa_to_sheet([
     ['Serviciu', 'Durată (min)', 'Preț (lei)'],
-    ...procedures.map((p) => [p.name, p.durationMin, p.price ?? '']),
+    ...procedures.map((p) => [p.name, p.durationMin, priceOn(p, todayISO()) ?? '']),
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, SHEET);

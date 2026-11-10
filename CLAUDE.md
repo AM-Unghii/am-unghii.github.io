@@ -17,6 +17,7 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - `apps-script/Code.gs` — server de sincronizare (Google Sheet); `docs/SINCRONIZARE.md` — ghid
 - `public/` — PWA (manifest, service worker, iconițe); `.github/workflows/pages.yml` — publicare web
 - `src/components/`, `src/screens/` — UI; `src/components/ui.tsx` are piesele comune (Hero, Section, Sheet, Segmented, `useWide`)
+- `TESTING.md` — pașii de test pe versiune; `CHANGELOG.md` — istoric
 - `src/theme.ts` — culori, degradeuri, fonturi (Playfair Display titluri, Manrope text; încărcate în `App.tsx`)
 
 ## Reguli
@@ -24,6 +25,8 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - Texte vizibile doar prin `src/i18n.ts`.
 - Date reale rămân local; în repo doar date fictive.
 - Prețul e opțional și apare doar dacă `settings.usePrices` e pornit.
+- Prețuri: programarea își păstrează `price` (copie). Serviciul are istoric `prices` (`from` = `YYYY-MM-DD`, gol = dintotdeauna); logica în `src/utils/prices.ts` (`priceOn`). Schimbarea unui preț nu atinge trecutul; programările viitoare se actualizează doar cu confirmare.
+- Versiune: `src/version.ts` (`APP_VERSION`) + `package.json` + `app.json`, mărite la fiecare livrare; apare jos în Setări, cu commit-ul pus de CI (`EXPO_PUBLIC_COMMIT`).
 - Datele se salvează la fiecare modificare; nu introduce cod care șterge/rescrie datele fără confirmare.
 - Ștergerea = marcaj `deleted:true` (nu se scoate rândul), altfel nu se sincronizează. UI folosește doar `appointments` din context (fără șterse).
 - Cea mai recentă `updatedAt` câștigă la sincronizare; orice modificare de programare setează `updatedAt`.

@@ -1,9 +1,14 @@
 # Changelog
 
-## Nelansat
+## 1.3.0 — 2026-11-10
+- Prețuri cu istoric: fiecare serviciu are o listă de prețuri cu „Valabil de la”. Programările își păstrează prețul lor, deci rapoartele din trecut nu se schimbă când modifici prețul.
+- Programare nouă: prețul se completează cu cel valabil la data programării și se reface la schimbarea serviciului sau a datei (dacă nu l-ai scris de mână).
+- La un preț nou, aplicația întreabă dacă actualizează programările „Programat” de la acea dată încolo care au încă prețul vechi. Cele finalizate, cele din trecut și cele cu preț schimbat de mână rămân neschimbate.
+- Versiunea aplicației apare jos în Setări („Versiune 1.3.0 · <commit>”).
 - Iconița aplicației: „A.M.” și „Unghii” pe două rânduri, scris puțin îngroșat, cam de 2 ori mai mare decât înainte; „MANICHIURĂ” scos din iconiță (nu se citea). Toate variantele (fără fundal, alb pătrat, alb rotund), iconița iPhone, favicon și iconițele Android native.
 - Manifest: iconițe „maskable” pentru varianta cu fundal alb (Android le umple forma, fără ramă albă micșorată).
-- Teste: generare iconițe OK, verificate vizual la 512 și 96 px. Netestat pe telefon real.
+- Teste: `tsc --noEmit` OK; build web OK; teste pe logica prețurilor (prag de dată, înlocuire la aceeași dată, programări afectate) OK; în browser: istoric afișat, confirmare → doar programarea viitoare cu prețul vechi actualizată, prețul completat automat la programare nouă OK. Netestat pe telefon real și cu sincronizarea pe Google real.
+- Teste iconițe: generare iconițe OK, verificate vizual la 512 și 96 px. Netestat pe telefon real.
 
 ## 1.2.0 — 2026-11-02
 - Aspect nou: fonturi Playfair Display + Manrope, antete cu degradeu prună–roz, accente aurii, carduri cu inițiale, bară de jos plutitoare, ferestre centrate pe calculator.
