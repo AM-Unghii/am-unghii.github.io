@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppData, Procedure, Settings } from '../types';
-import { procedureColors } from '../theme';
+import { personalColor, procedureColors } from '../theme';
 
 const KEY = 'amu:v1:data';
 const KEY_BACKUP = 'amu:v1:backup';
@@ -10,6 +10,7 @@ export const defaultProcedures: Procedure[] = [
   { id: 'p-pedi', name: 'Pedichiură', durationMin: 60, color: procedureColors[1] },
   { id: 'p-gel', name: 'Gel / semipermanent', durationMin: 90, color: procedureColors[2] },
   { id: 'p-mp', name: 'Manichiură + pedichiură', durationMin: 120, color: procedureColors[3] },
+  { id: 'p-personal', name: 'Programare personală', durationMin: 60, color: personalColor, kind: 'personal', report: true },
 ];
 
 export const defaultSettings: Settings = {

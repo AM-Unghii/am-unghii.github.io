@@ -12,7 +12,8 @@ import {
 import { Hero, IconBtn, Segmented, useWide } from '../components/ui';
 import { TimeGrid } from '../components/TimeGrid';
 import { MonthView, YearView } from '../components/MonthYear';
-import { ApptRow } from '../components/ApptRow';
+import { ApptRow, apptSub } from '../components/ApptRow';
+import { apptName } from '../utils/appts';
 import { DatePicker } from '../components/DatePicker';
 import { AppointmentSheet, SheetTarget } from '../components/AppointmentSheet';
 
@@ -49,20 +50,20 @@ function SidePanel({ onAppt }: { onAppt: (a: Appointment) => void }) {
     .sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time));
   const next = upcoming[0];
   const weekStart = startOfWeek(today);
-  const weekCount = live.filter((a) => a.date >= weekStart && a.date <= addDays(weekStart, 6)).length;
+  const weekCount = live.filter((a) => !a.personal && a.date >= weekStart && a.date <= addDays(weekStart, 6)).length;
   return (
     <ScrollView style={st.side} contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <Text style={st.sideTitle}>{t.panel.today}</Text>
       <Text style={st.sideDate}>{longDate(today)}</Text>
       <View style={st.statRow}>
-        <View style={st.stat}><Text style={st.statVal}>{todays.length}</Text><Text style={st.statLbl}>{t.panel.todayCount}</Text></View>
+        <View style={st.stat}><Text style={st.statVal}>{todays.filter((a) => !a.personal).length}</Text><Text style={st.statLbl}>{t.panel.todayCount}</Text></View>
         <View style={st.stat}><Text style={st.statVal}>{weekCount}</Text><Text style={st.statLbl}>{t.panel.weekCount}</Text></View>
       </View>
       {next ? (
         <Pressable onPress={() => onAppt(next)} style={st.nextCard} accessibilityRole="button">
           <Text style={st.nextLbl}>{t.panel.next}</Text>
-          <Text style={st.nextName} numberOfLines={1}>{next.clientName}</Text>
-          <Text style={st.nextSub}>{next.date === today ? t.today : shortDate(next.date)} · {next.time} · {next.procedureName}</Text>
+          <Text style={st.nextName} numberOfLines={1}>{apptName(next)}</Text>
+          <Text style={st.nextSub}>{next.date === today ? t.today : shortDate(next.date)} · {next.time} · {apptSub(next)}</Text>
         </Pressable>
       ) : null}
       <Text style={[st.groupTitle, { marginTop: 22 }]}>{t.panel.todayList}</Text>
@@ -118,7 +119,7 @@ export function ProgramScreen({ newSignal = 0 }: { newSignal?: number }) {
   const customDays = rangeDays(from, to);
   const hasAny = appointments.length > 0;
   const today = todayISO();
-  const todayCount = appointments.filter((a) => a.date === today && a.status !== 'anulat').length;
+  const todayCount = appointments.filter((a) => a.date === today && a.status !== 'anulat' && !a.personal).length;
   const hour = new Date().getHours();
   const greet = hour < 12 ? t.greet.morning : hour < 18 ? t.greet.day : t.greet.evening;
 

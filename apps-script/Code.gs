@@ -13,8 +13,9 @@ var PAROLA = 'schimba-ma';
 
 var SHEET_NAME = 'Programări';
 var HEAD = ['id', 'data', 'ora', 'durata_min', 'nume', 'telefon', 'procedura_id', 'procedura', 'pret',
-            'observatii', 'status', 'creat', 'modificat', 'sters', 'server_mod', 'eveniment_calendar', 'calendar_sync', 'reprogramari'];
-var C_EVENT = 15, C_CALSYNC = 16, C_RESCH = 17;
+            'observatii', 'status', 'creat', 'modificat', 'sters', 'server_mod', 'eveniment_calendar', 'calendar_sync', 'reprogramari',
+            'personal', 'in_rapoarte'];
+var C_EVENT = 15, C_CALSYNC = 16, C_RESCH = 17, C_PERS = 18, C_REPORT = 19;
 var MAX_CAL_PER_CALL = 30; // ca un apel să nu dureze prea mult; restul se face la următoarea sincronizare
 
 function doGet() {
@@ -96,7 +97,8 @@ function toRow_(a, now, old) {
           (a.price === undefined || a.price === null) ? '' : a.price, a.notes || '', a.status || 'programat',
           a.createdAt || '', a.updatedAt || '', a.deleted ? 'DA' : '', now,
           old ? (old[C_EVENT] || '') : '', old ? (old[C_CALSYNC] || '') : '',
-          (a.reschedules && a.reschedules.length) ? JSON.stringify(a.reschedules) : ''];
+          (a.reschedules && a.reschedules.length) ? JSON.stringify(a.reschedules) : '',
+          a.personal ? 'DA' : '', a.personal ? (a.report === false ? 'NU' : 'DA') : ''];
 }
 
 // ---------------- Google Calendar ----------------
@@ -158,8 +160,10 @@ function calendarWork_(values, cal) {
     if (!target) target = targetCalendar_(cal);
     var start = apptDate_(r[1], r[2]);
     var end = new Date(start.getTime() + (Number(r[3]) || 60) * 60000);
-    var title = String(r[4]) + ' · ' + String(r[7]);
-    var desc = [r[5] ? 'Tel: ' + r[5] : '', r[9] ? String(r[9]) : '', '#am-' + r[0]].filter(String).join('\n');
+    var personal = String(r[C_PERS]) === 'DA';
+    // programare personală: serviciul (+ locul, dacă e scris); altfel: clienta · serviciul
+    var title = personal ? String(r[7]) + (r[4] ? ' · ' + String(r[4]) : '') : String(r[4]) + ' · ' + String(r[7]);
+    var desc = [personal ? 'Programare personală' : '', r[5] ? 'Tel: ' + r[5] : '', r[9] ? String(r[9]) : '', '#am-' + r[0]].filter(String).join('\n');
     var ev = null;
     if (evId) {
       try { ev = CalendarApp.getEventById(evId); } catch (e) { ev = null; }
@@ -205,6 +209,7 @@ function toAppt_(r) {
   if (r[8] !== '' && r[8] !== null) a.price = Number(r[8]);
   if (r[9] !== '') a.notes = String(r[9]);
   if (r[C_RESCH]) { try { a.reschedules = JSON.parse(r[C_RESCH]); } catch (e) {} }
+  if (String(r[C_PERS]) === 'DA') { a.personal = true; a.report = String(r[C_REPORT]) !== 'NU'; }
   return a;
 }
 
@@ -216,7 +221,7 @@ function sheet_() {
     sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold');
     sh.setFrozenRows(1);
   } else if (String(sh.getRange(1, HEAD.length).getValue()) !== HEAD[HEAD.length - 1]) {
-    sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold'); // coloane noi (calendar, reprogramări)
+    sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold'); // coloane noi (calendar, reprogramări, personal)
   }
   // text simplu, ca Google sa nu transforme datele/orele/telefoanele
   ['B:C', 'F:F', 'L:M', 'P:R'].forEach(function (c) { sh.getRange(c).setNumberFormat('@'); });

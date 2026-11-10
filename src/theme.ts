@@ -30,6 +30,17 @@ export const gradients = {
 
 export const procedureColors = ['#B8336A', '#7C5CD6', '#2B9AA8', '#E2873B', '#4FA36A', '#C74FB3'];
 
+/** Toate culorile din care se poate alege la un serviciu (primele 6 = cele de până acum). */
+export const colorChoices = [
+  ...procedureColors,
+  '#E0457B', '#F08C8C', '#D9534F', '#A0522D', '#C6A16A', '#E8B923',
+  '#8BC34A', '#1E8C6E', '#3F7FD6', '#5B6BBF', '#9B59B6', '#6D4C41',
+  '#607D8B', '#4A4453',
+];
+
+/** Culoarea implicită pentru programările personale (gri-albăstrui, ca să se deosebească de cliente). */
+export const personalColor = '#607D8B';
+
 export const radius = { sm: 10, md: 16, lg: 22, xl: 28, pill: 999 };
 
 export const shadow = {

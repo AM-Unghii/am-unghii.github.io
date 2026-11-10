@@ -48,7 +48,8 @@ export function MonthView({
 export function YearView({
   year, appts, usePrices, onMonth, cols = 2,
 }: { year: string; appts: Appointment[]; usePrices: boolean; onMonth: (iso: string) => void; cols?: number }) {
-  const live = appts.filter((a) => a.status !== 'anulat' && a.date.startsWith(year.slice(0, 4)));
+  // doar programările cu cliente (cele personale nu sunt încasări)
+  const live = appts.filter((a) => a.status !== 'anulat' && !a.personal && a.date.startsWith(year.slice(0, 4)));
   const counts = Array.from({ length: 12 }, () => 0);
   const sums = Array.from({ length: 12 }, () => 0);
   live.forEach((a) => { const m = Number(a.date.slice(5, 7)) - 1; counts[m]++; sums[m] += a.price || 0; });

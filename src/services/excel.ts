@@ -8,7 +8,7 @@ import { todayISO, uid } from '../utils/date';
 import { priceOn } from '../utils/prices';
 import { procedureColors } from '../theme';
 
-const HEAD = ['Data', 'Ora', 'Durată (min)', 'Nume', 'Telefon', 'Procedură', 'Preț (lei)', 'Status', 'Observații', 'ID', 'Reprogramări'];
+const HEAD = ['Data', 'Ora', 'Durată (min)', 'Nume', 'Telefon', 'Procedură', 'Preț (lei)', 'Status', 'Observații', 'ID', 'Reprogramări', 'Personal', 'În rapoarte'];
 const SHEET = 'Programări';
 
 function buildBook(appts: Appointment[], procedures: Procedure[]) {
@@ -16,12 +16,13 @@ function buildBook(appts: Appointment[], procedures: Procedure[]) {
   const rows = sorted.map((a) => [
     a.date, a.time, a.durationMin, a.clientName, a.phone || '', a.procedureName,
     a.price ?? '', a.status, a.notes || '', a.id, a.reschedules?.length || 0,
+    a.personal ? 'DA' : '', a.personal ? (a.report === false ? 'NU' : 'DA') : '',
   ]);
   const ws = XLSX.utils.aoa_to_sheet([HEAD, ...rows]);
-  ws['!cols'] = [12, 7, 12, 24, 14, 24, 11, 11, 30, 16, 12].map((wch) => ({ wch }));
+  ws['!cols'] = [12, 7, 12, 24, 14, 24, 11, 11, 30, 16, 12, 9, 11].map((wch) => ({ wch }));
   const wp = XLSX.utils.aoa_to_sheet([
-    ['Serviciu', 'Durată (min)', 'Preț (lei)'],
-    ...procedures.map((p) => [p.name, p.durationMin, priceOn(p, todayISO()) ?? '']),
+    ['Serviciu', 'Durată (min)', 'Preț (lei)', 'Tip'],
+    ...procedures.map((p) => [p.name, p.durationMin, priceOn(p, todayISO()) ?? '', p.kind === 'personal' ? 'personal' : 'cliente']),
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, SHEET);
@@ -76,11 +77,13 @@ export async function pickAndParseExcel(known: Procedure[]): Promise<ImportResul
   const now = new Date().toISOString();
   const appointments: Appointment[] = [];
   for (const r of rows) {
-    const [date, time, dur, name, phone, procName, price, status, notes, id] = r.map((c: any) => String(c ?? '').trim());
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{1,2}:\d{2}$/.test(time) || !name) continue;
+    const [date, time, dur, name, phone, procName, price, status, notes, id, , pers, rep] = r.map((c: any) => String(c ?? '').trim());
+    const personal = pers.toUpperCase() === 'DA';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{1,2}:\d{2}$/.test(time) || (!name && !personal)) continue;
     let proc = procs.find((p) => p.name.toLowerCase() === procName.toLowerCase());
     if (!proc && procName) {
-      proc = { id: 'p-' + uid(), name: procName, durationMin: Number(dur) || 60, color: procedureColors[procs.length % procedureColors.length] };
+      proc = { id: 'p-' + uid(), name: procName, durationMin: Number(dur) || 60, color: procedureColors[procs.length % procedureColors.length],
+        ...(personal ? { kind: 'personal' as const, report: true } : {}) };
       procs.push(proc);
       newProcedures.push(proc);
     }
@@ -96,6 +99,8 @@ export async function pickAndParseExcel(known: Procedure[]): Promise<ImportResul
       procedureName: procName || 'Fără procedură',
       price: Number.isFinite(p) ? p : undefined,
       notes: notes || undefined,
+      personal: personal || undefined,
+      report: personal ? rep.toUpperCase() !== 'NU' : undefined,
       status: (['programat', 'finalizat', 'anulat'].includes(status) ? status : 'programat') as Status,
       createdAt: now,
       updatedAt: now,

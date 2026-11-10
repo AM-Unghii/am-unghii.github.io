@@ -30,7 +30,7 @@ const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof type
 function Sidebar({ tab, setTab, onNew }: { tab: Tab; setTab: (t: Tab) => void; onNew: () => void }) {
   const { appointments, syncConnected, syncStatus } = useApp();
   const today = todayISO();
-  const todayCount = appointments.filter((a) => a.date === today && a.status !== 'anulat').length;
+  const todayCount = appointments.filter((a) => a.date === today && a.status !== 'anulat' && !a.personal).length;
   return (
     <LinearGradient colors={gradients.sidebar} style={st.side}>
       <View style={st.brand}>

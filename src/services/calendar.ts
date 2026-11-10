@@ -3,6 +3,7 @@ import * as Calendar from 'expo-calendar/legacy';
 import { Appointment } from '../types';
 import { apptStart } from '../utils/date';
 import { t } from '../i18n';
+import { apptTitle } from '../utils/appts';
 
 const isNative = Platform.OS !== 'web';
 
@@ -49,7 +50,7 @@ export async function ensureCalendarPermission(): Promise<boolean> {
   }
 }
 
-const title = (a: Appointment) => `${a.clientName} · ${a.procedureName}`;
+const title = (a: Appointment) => apptTitle(a);
 /** Marcaj în notițele evenimentului, ca să-l regăsim chiar dacă id-ul s-a pierdut */
 const tag = (a: Appointment) => `#am-${a.id}`;
 
@@ -100,7 +101,7 @@ export async function syncEvent(a: Appointment, reminder: number | null, calenda
  * Șterge evenimentul programării din calendarul telefonului.
  * Dacă id-ul lipsește sau e greșit, caută evenimentul după marcaj / titlu în ziua programării.
  */
-export async function removeEvent(a: Pick<Appointment, 'id' | 'date' | 'time' | 'durationMin' | 'clientName' | 'procedureName' | 'calendarEventId'>): Promise<void> {
+export async function removeEvent(a: Pick<Appointment, 'id' | 'date' | 'time' | 'durationMin' | 'clientName' | 'procedureName' | 'calendarEventId' | 'personal'>): Promise<void> {
   if (!isNative) return;
   let done = false;
   if (a.calendarEventId) {
@@ -153,7 +154,7 @@ export function googleCalendarUrl(a: Appointment): string {
   const end = new Date(start.getTime() + a.durationMin * 60000);
   const q = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `${a.clientName} · ${a.procedureName}`,
+    text: apptTitle(a),
     dates: `${fmt(start)}/${fmt(end)}`,
     details: [a.phone ? `Tel: ${a.phone}` : '', a.notes || ''].filter(Boolean).join('\n'),
   });

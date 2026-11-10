@@ -8,7 +8,8 @@ import { Appointment } from '../types';
 import { colors, font, radius } from '../theme';
 import { t } from '../i18n';
 import { longDate, todayISO } from '../utils/date';
-import { overlapping, parseTime } from '../utils/appts';
+import { apptName, overlapping, parseTime } from '../utils/appts';
+import { apptSub } from './ApptRow';
 
 export function confirmBox(title: string, body: string, ok: string, onOk: () => void) {
   if (Platform.OS === 'web') {
@@ -52,7 +53,7 @@ export function RescheduleFlow({ appt, onClose, onDone }: { appt: Appointment | 
         onPick={(d) => { picked.current = true; setDate(d); setStep('time'); }}
         onClose={() => { if (!picked.current) onClose(); picked.current = false; }} />
       <Sheet visible={step === 'time'} onClose={onClose} title={t.rs.pickTitle}>
-        <Text style={st.who}>{appt.clientName} · {appt.procedureName}</Text>
+        <Text style={st.who}>{apptName(appt)} · {apptSub(appt)}</Text>
         <Text style={st.was}>{longDate(appt.date)}, {appt.time}</Text>
         <Label>{t.rs.pickDate}</Label>
         <Btn kind="soft" icon="calendar" label={`${longDate(date)} ${date.slice(0, 4)}`} onPress={() => { picked.current = false; setStep('date'); }} />
@@ -61,7 +62,7 @@ export function RescheduleFlow({ appt, onClose, onDone }: { appt: Appointment | 
           onSubmitEditing={apply} autoFocus />
         {err ? <Text style={st.err}>{err}</Text> : null}
         {clash ? (
-          <View style={st.warn}><Ionicons name="warning" size={18} color={colors.warn} /><Text style={st.warnText}>{t.rs.overlapAt(`${clash.clientName} (${clash.time})`)}</Text></View>
+          <View style={st.warn}><Ionicons name="warning" size={18} color={colors.warn} /><Text style={st.warnText}>{clash.personal ? t.overlapPersonal(apptName(clash), clash.time) : t.rs.overlapAt(`${clash.clientName} (${clash.time})`)}</Text></View>
         ) : null}
         <Btn label={t.rs.apply} icon="swap-horizontal" onPress={apply} style={{ marginTop: 22 }} />
       </Sheet>

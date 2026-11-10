@@ -18,7 +18,13 @@ export interface Procedure {
   /** istoricul prețurilor; programările își păstrează propriul preț, deci schimbarea nu atinge trecutul */
   prices?: PricePoint[];
   color: string;
+  /** „client” = serviciu pentru cliente (încasare, implicit); „personal” = programare a mea (preț = cheltuială) */
+  kind?: ProcKind;
+  /** doar la „personal”: prețul intră în rapoarte ca cheltuială (implicit da) */
+  report?: boolean;
 }
+
+export type ProcKind = 'client' | 'personal';
 
 /** o mutare a programării: de unde, unde și când s-a făcut */
 export interface Reschedule {
@@ -47,6 +53,10 @@ export interface Appointment {
   status: Status;
   /** istoricul mutărilor (pentru rapoarte: câte au fost reprogramate) */
   reschedules?: Reschedule[];
+  /** programare personală (a mea, nu a unei cliente); copie din serviciu, ca să rămână corectă dacă serviciul e șters */
+  personal?: boolean;
+  /** doar la personale: prețul intră în rapoarte ca cheltuială */
+  report?: boolean;
   calendarEventId?: string;
   /** șters (rămâne ca „pietre de mormânt” ca ștergerea să se sincronizeze) */
   deleted?: boolean;
@@ -92,7 +102,8 @@ export interface Settings {
 export type ListSort = 'data' | 'dataDesc' | 'nume' | 'procedura' | 'adaugate';
 export type ListPeriod = 'viitoare' | 'azi' | 'saptamana' | 'trecute' | 'toate';
 export type ListStatus = 'toate' | 'programat' | 'finalizat' | 'anulat' | 'reprogramate';
-export interface ListPrefs { sort: ListSort; period: ListPeriod; status: ListStatus }
+export type ListKind = 'toate' | 'cliente' | 'personale';
+export interface ListPrefs { sort: ListSort; period: ListPeriod; status: ListStatus; kind?: ListKind }
 
 export type LogoBg = 'alb' | 'transparent';
 export type LogoShape = 'patrat' | 'rotund';

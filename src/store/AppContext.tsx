@@ -7,7 +7,7 @@ import { createTestEvent, removeEvent, syncEvent } from '../services/calendar';
 import { callServer, mergeAppointments, splitCode, SyncError } from '../services/sync';
 import { t } from '../i18n';
 import { todayISO, uid } from '../utils/date';
-import { addReschedule } from '../utils/appts';
+import { addReschedule, withKind } from '../utils/appts';
 import { Platform } from 'react-native';
 
 export type ApptInput = Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'calendarEventId' | 'deleted'> & {
@@ -87,7 +87,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (loaded) saveData(data).then(() => setSavedAt(new Date().toISOString()));
   }, [data, loaded]);
 
-  const live = useMemo(() => data.appointments.filter((a) => !a.deleted), [data.appointments]);
+  // fără cele șterse; „personal” / „report” completate din serviciu acolo unde lipsesc
+  const live = useMemo(() => data.appointments.filter((a) => !a.deleted).map((a) => withKind(a, data.procedures)), [data.appointments, data.procedures]);
 
   // memento-uri
   useEffect(() => {
