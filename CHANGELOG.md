@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.1 — 2026-11-10
+- **Rezervă o perioadă**: la „Programare personală” apare butonul „Rezervă mai multe zile (săptămâna verde, școală…)”. Alegi săptămâna (săptămâna asta / viitoare / peste 2) sau datele de la–până, numele („Săptămâna verde”), orele și dacă doar luni–vineri. Se pune câte o programare personală pe zi (fără cheltuială), vizibilă în calendar și luată în calcul la suprapuneri. Se modifică sau se șterge pe fiecare zi în parte. Fără schimbări în Code.gs față de 1.5.0.
+
+## 1.5.0 — 2026-11-10
+- **Culori la servicii**: 20 de culori de ales (în loc de 6). Culoarea apare în calendar, în listă, în ziua din „Lună” și în rapoarte.
+- **Programări personale** (ale tale, de ex. la alt salon, coafor, medic): în fereastra programării alegi sus „Pentru o clientă” sau „Personală (a mea)”. La personale numele e opțional („Unde / cu cine”), fără telefon, cu preț opțional („Cât plătesc”) și comutatorul „Intră în rapoarte ca cheltuială”.
+- Apar în **același calendar**, cu chenar punctat și iconiță de persoană, în culoarea lor (implicit gri-albăstrui). Și în tabul „Programări” (filtru nou „Tip”: toate / cliente / personale), unde le poți adăuga și din rândul rapid (fără nume).
+- **Suprapuneri**: programările personale contează la verificare („Atenție: atunci ai o programare personală…”). În fereastra programării apare acum lista „În ziua aceea” cu tot ce mai ai în ziua aleasă (cliente + personale), cu suprapunerile evidențiate.
+- **Servicii de tip „Personal”**: la fiecare serviciu alegi tipul „Pentru cliente” (încasare) sau „Personal” (cheltuială), plus dacă prețul intră implicit în rapoarte. Dacă nu ai niciun serviciu personal, apare automat „Programare personală”. Instalările noi îl au în listă.
+- **Rapoarte**: Încasări, Cheltuieli și ce rămâne (net), plus secțiunea „Cheltuieli (programări personale)”. Programările personale nu se numără la programări, medie, anulate, reprogramate, nici în „programări azi”.
+- Sincronizare: coloane noi `personal` și `in_rapoarte` în Google Sheet — **trebuie lipit din nou Code.gs și publicată o versiune nouă**. Fără asta, pe celelalte dispozitive o programare personală se recunoaște tot după tipul serviciului, dar comutatorul „Intră în rapoarte” de pe programare nu ajunge. Google Calendar: titlul unei programări personale e „Serviciu · loc”. Excel: coloane „Personal” și „În rapoarte”.
+
 ## 1.4.0 — 2026-11-10
 - Tab nou „Programări” (între Program și Rapoarte): lista tuturor programărilor, ca într-un tabel. Sortare (dată, nume, procedură, adăugate recent), perioadă (de azi încolo, azi, săptămâna asta, trecute, toate), status (inclusiv „Reprogramate”) și căutare. Alegerile se păstrează.
 - Rândul de sus = adăugare rapidă: nume, dată (calendar), oră, procedură; Enter adaugă programarea, care intră în listă în ordinea aleasă. Avertizează dacă se suprapune.

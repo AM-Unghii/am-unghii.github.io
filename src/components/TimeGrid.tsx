@@ -5,6 +5,8 @@ import { colors, tint, font } from '../theme';
 import { t } from '../i18n';
 import { dayNum, dowIndex, toMin, todayISO } from '../utils/date';
 import { procColor } from './ApptRow';
+import { apptName } from '../utils/appts';
+import { Ionicons } from '@expo/vector-icons';
 
 const HOUR_H_BASE = 64;
 const GUTTER = 42;
@@ -99,21 +101,25 @@ export function TimeGrid({
                     <Pressable
                       key={a.id}
                       onPress={() => onAppt(a)}
-                      accessibilityLabel={`${a.time} ${a.clientName}`}
+                      accessibilityLabel={`${a.time} ${apptName(a)}${a.personal ? ` (${t.personal.badge})` : ''}`}
                       style={[
                         st.block,
                         {
                           top, height: h, left: `${(lane / lanes) * 100}%`, width: `${100 / lanes}%`,
                           backgroundColor: a.status === 'finalizat' ? tint(c, 0.26) : tint(c, 0.14), borderLeftColor: c,
                         },
+                        a.personal && { borderStyle: 'dashed', borderWidth: 1, borderColor: tint(c, 0.7), borderLeftWidth: 3, backgroundColor: tint(c, 0.1) },
                       ]}
                     >
                       {narrow && lanes > 1 ? (
-                        <Text style={[st.bName, { fontSize: 12, textAlign: 'center' }]}>{a.clientName.charAt(0).toUpperCase()}</Text>
+                        a.personal ? <Ionicons name="person" size={12} color={c} style={{ alignSelf: 'center' }} />
+                          : <Text style={[st.bName, { fontSize: 12, textAlign: 'center' }]}>{a.clientName.charAt(0).toUpperCase()}</Text>
                       ) : (
-                        <Text style={[st.bName, narrow && { fontSize: 11 }]} numberOfLines={narrow ? 2 : 1}>{a.clientName}</Text>
+                        <Text style={[st.bName, narrow && { fontSize: 11 }]} numberOfLines={narrow ? 2 : 1}>
+                          {a.personal ? <Ionicons name="person" size={narrow ? 10 : 12} color={c} /> : null}{a.personal ? ' ' : ''}{apptName(a)}
+                        </Text>
                       )}
-                      {h >= 40 && !narrow ? <Text style={st.bSub} numberOfLines={1}>{a.time} · {a.procedureName}</Text> : null}
+                      {h >= 40 && !narrow ? <Text style={st.bSub} numberOfLines={1}>{a.time} · {a.personal ? (a.clientName ? a.procedureName : t.personal.badge) : a.procedureName}</Text> : null}
                       {h >= 40 && narrow && lanes === 1 ? <Text style={st.bSubN} numberOfLines={1}>{a.time}</Text> : null}
                     </Pressable>
                   );

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../store/AppContext';
-import { NotifyVia, Procedure, ViewMode } from '../types';
-import { colors, font, procedureColors, tint } from '../theme';
+import { NotifyVia, ProcKind, Procedure, ViewMode } from '../types';
+import { colorChoices, colors, font, procedureColors, tint } from '../theme';
 import { t } from '../i18n';
-import { Btn, Chip, Hero, Input, Label, Row, Section, Sheet, useWide } from '../components/ui';
+import { Btn, Chip, Hero, Input, Label, Row, Section, Segmented, Sheet, useWide } from '../components/ui';
 import { dateWithYear, todayISO, uid } from '../utils/date';
 import { DatePicker } from '../components/DatePicker';
 import { addPrice, affectedByPrice, priceHistory, priceOn } from '../utils/prices';
@@ -219,10 +219,10 @@ export function SettingsScreen() {
       <Section icon="sparkles-outline" title={t.settings.services} hint={t.settings.servicesHint}>
         {procedures.map((p, i) => (
           <Pressable key={p.id} onPress={() => setEditing(p)} style={[st.svc, i > 0 && { borderTopWidth: 1, borderTopColor: colors.line }]} accessibilityRole="button">
-            <View style={[st.dot, { backgroundColor: p.color }]} />
+            {p.kind === 'personal' ? <Ionicons name="person" size={16} color={p.color} /> : <View style={[st.dot, { backgroundColor: p.color }]} />}
             <View style={{ flex: 1 }}>
               <Text style={st.rowText}>{p.name}</Text>
-              <Text style={st.sub}>{p.durationMin} {t.min}{settings.usePrices ? priceLabel(p) : ''}</Text>
+              <Text style={st.sub}>{p.kind === 'personal' ? `${t.settings.personalTag} · ` : ''}{p.durationMin} {t.min}{settings.usePrices ? priceLabel(p) : ''}</Text>
             </View>
             <Ionicons name="create-outline" size={22} color={colors.muted} />
           </Pressable>
@@ -306,8 +306,13 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
   const [from, setFrom] = useState(todayISO());
   const [pickFrom, setPickFrom] = useState(false);
   const [color, setColor] = useState(procedureColors[0]);
+  const [kind, setKind] = useState<ProcKind>('client');
+  const [report, setReport] = useState(true);
   React.useEffect(() => {
-    if (proc) { setName(proc.name); setDur(proc.durationMin); setPrice(''); setFrom(todayISO()); setColor(proc.color); }
+    if (proc) {
+      setName(proc.name); setDur(proc.durationMin); setPrice(''); setFrom(todayISO()); setColor(proc.color);
+      setKind(proc.kind || 'client'); setReport(proc.report ?? true);
+    }
   }, [proc]);
   if (!proc) return null;
   const today = todayISO();
@@ -318,7 +323,7 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
   const validPrice = pr !== undefined && Number.isFinite(pr) && pr >= 0;
 
   const save = () => {
-    const base: Procedure = { ...proc, name: name.trim(), durationMin: dur, color };
+    const base: Procedure = { ...proc, name: name.trim(), durationMin: dur, color, kind: kind === 'personal' ? 'personal' : undefined, report: kind === 'personal' ? report : undefined };
     if (usePrices && validPrice) onSave(addPrice(base, from, pr, today), { from, price: pr });
     else onSave(base);
   };
@@ -326,6 +331,9 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
   return (
     <>
     <Sheet visible onClose={onClose} title={t.settings.services}>
+      <Label>{t.settings.kind}</Label>
+      <Segmented items={(['client', 'personal'] as ProcKind[]).map((k) => ({ key: k, label: t.settings.kindOpts[k] }))} value={kind} onChange={setKind} />
+      <Text style={[st.sub, { marginTop: 6 }]}>{t.settings.kindHint[kind]}</Text>
       <Label>{t.settings.serviceName}</Label>
       <Input value={name} onChangeText={setName} autoFocus={!proc.name} />
       <Label>{t.duration}</Label>
@@ -363,14 +371,26 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
             <Text style={st.rowText}>{dateWithYear(from)}</Text>
           </Pressable>
           <Text style={[st.sub, { marginTop: 8 }]}>{t.settings.priceHint}</Text>
+          {kind === 'personal' ? (
+            <Row style={{ justifyContent: 'space-between', marginTop: 14 }}>
+              <View style={{ flex: 1, paddingRight: 12 }}>
+                <Text style={st.rowText}>{t.settings.reportDefault}</Text>
+                <Text style={st.sub}>{t.settings.reportDefaultHint}</Text>
+              </View>
+              <Switch value={report} onValueChange={setReport} trackColor={{ true: colors.primary, false: '#DDD3DF' }} />
+            </Row>
+          ) : null}
         </>
       ) : null}
-      <Label>Culoare</Label>
-      <Row>
-        {procedureColors.map((c) => (
-          <Pressable key={c} onPress={() => setColor(c)} style={[st.swatch, { backgroundColor: c }, c === color && st.swatchOn]} accessibilityLabel={c} />
+      <Label>{t.settings.color}</Label>
+      <View style={st.swatches}>
+        {(colorChoices.includes(color) ? colorChoices : [color, ...colorChoices]).map((c) => (
+          <Pressable key={c} onPress={() => setColor(c)} style={[st.swatch, { backgroundColor: c }, c === color && st.swatchOn]}
+            accessibilityRole="radio" accessibilityState={{ checked: c === color }} accessibilityLabel={`${t.settings.color} ${c}`}>
+            {c === color ? <Ionicons name="checkmark" size={20} color="#fff" /> : null}
+          </Pressable>
         ))}
-      </Row>
+      </View>
       <Btn label={t.save} icon="checkmark" style={{ marginTop: 24 }} disabled={!name.trim()} onPress={save} />
       {canDelete ? <Btn kind="danger" icon="trash-outline" label={t.settings.delService} style={{ marginTop: 10 }} onPress={() => onDelete(proc.id)} /> : null}
     </Sheet>
@@ -390,7 +410,8 @@ const st = StyleSheet.create({
   svc: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
   dot: { width: 16, height: 16, borderRadius: 8 },
   msg: { marginTop: 12, color: colors.primaryDark, ...font.w700, fontSize: 15 },
-  swatch: { width: 40, height: 40, borderRadius: 20, marginRight: 10, borderWidth: 3, borderColor: 'transparent' },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  swatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   swatchOn: { borderColor: colors.ink },
   logoBox: { alignSelf: 'center', padding: 14, borderRadius: 22, backgroundColor: colors.plum },
   logoImg: { width: 140, height: 140 },

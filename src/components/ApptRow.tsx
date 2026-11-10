@@ -2,28 +2,34 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Appointment, Procedure } from '../types';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, font, initials, radius, shadow, tint } from '../theme';
+import { colors, font, initials, personalColor, radius, shadow, tint } from '../theme';
 import { t } from '../i18n';
 import { endTime } from '../utils/date';
+import { apptName } from '../utils/appts';
 
 export const procColor = (a: Appointment, procs: Procedure[]) =>
-  procs.find((p) => p.id === a.procedureId)?.color || '#9A8FA0';
+  procs.find((p) => p.id === a.procedureId)?.color || (a.personal ? personalColor : '#9A8FA0');
+
+/** Al doilea rând: serviciul (la personale: „Personal · serviciul”). */
+export const apptSub = (a: Appointment) =>
+  a.personal ? (a.clientName ? `${t.personal.badge} · ${a.procedureName}` : t.personal.badge) : a.procedureName;
 
 export function ApptRow({ a, procs, showPrice, onPress, compact }: { a: Appointment; procs: Procedure[]; showPrice: boolean; onPress: () => void; compact?: boolean }) {
   const c = procColor(a, procs);
   const cancelled = a.status === 'anulat';
   const done = a.status === 'finalizat';
   return (
-    <Pressable onPress={onPress} style={({ pressed, hovered }: any) => [st.row, compact && st.compact, hovered && st.hover, pressed && { opacity: 0.85 }]} accessibilityRole="button">
+    <Pressable onPress={onPress} style={({ pressed, hovered }: any) => [st.row, a.personal && { borderStyle: 'dashed', borderColor: tint(c, 0.55), backgroundColor: '#FBFAFC' }, compact && st.compact, hovered && st.hover, pressed && { opacity: 0.85 }]} accessibilityRole="button">
       <View style={[st.avatar, { backgroundColor: cancelled ? '#EFEAF0' : tint(c, 0.14) }, compact && { width: 38, height: 38, borderRadius: 19 }]}>
         {done ? <Ionicons name="checkmark" size={18} color={colors.success} />
+          : a.personal ? <Ionicons name="person" size={18} color={cancelled ? colors.muted : c} />
           : <Text style={[st.avatarText, { color: cancelled ? colors.muted : c }]}>{initials(a.clientName) || '•'}</Text>}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={[st.name, compact && { fontSize: 15 }, cancelled && st.cancelled]} numberOfLines={1}>{a.clientName}</Text>
+        <Text style={[st.name, compact && { fontSize: 15 }, cancelled && st.cancelled]} numberOfLines={1}>{apptName(a)}</Text>
         <View style={st.procRow}>
           <View style={[st.dot, { backgroundColor: cancelled ? '#CFC6D2' : c }]} />
-          <Text style={st.proc} numberOfLines={1}>{a.procedureName}</Text>
+          <Text style={st.proc} numberOfLines={1}>{apptSub(a)}</Text>
         </View>
       </View>
       <View style={{ alignItems: 'flex-end' }}>
@@ -34,7 +40,7 @@ export function ApptRow({ a, procs, showPrice, onPress, compact }: { a: Appointm
             <Text style={[st.badgeText, { color: done ? colors.success : colors.muted }]}>{t.statuses[a.status]}</Text>
           </View>
         ) : null}
-        {showPrice && a.price !== undefined ? <Text style={st.price}>{a.price} {t.lei}</Text> : null}
+        {showPrice && a.price !== undefined ? <Text style={[st.price, a.personal && { color: colors.muted }]}>{a.personal && a.report ? '−' : ''}{a.price} {t.lei}</Text> : null}
       </View>
     </Pressable>
   );

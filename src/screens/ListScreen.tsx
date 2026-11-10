@@ -6,18 +6,19 @@ import { Appointment, ListPrefs } from '../types';
 import { colors, font, radius, shadow, tint } from '../theme';
 import { t } from '../i18n';
 import { dateWithYear, endTime, longDate, todayISO } from '../utils/date';
-import { defaultListPrefs, filterAppts, overlapping, parseTime, rescheduleCount, sortAppts } from '../utils/appts';
+import { apptName, defaultListPrefs, filterAppts, isPersonalProc, overlapping, parseTime, rescheduleCount, sortAppts, withPersonalFallback } from '../utils/appts';
 import { priceOn } from '../utils/prices';
 import { Card, Chip, Hero, Input, Label, Row, useWide } from '../components/ui';
 import { DatePicker } from '../components/DatePicker';
 import { ApptActions } from '../components/ApptActions';
 import { AppointmentSheet } from '../components/AppointmentSheet';
-import { procColor } from '../components/ApptRow';
+import { apptSub, procColor } from '../components/ApptRow';
 
 export function ListScreen() {
-  const { appointments, procedures, settings, saveAppointment, updateSettings } = useApp();
+  const { appointments, procedures: realProcs, settings, saveAppointment, updateSettings } = useApp();
+  const procedures = useMemo(() => withPersonalFallback(realProcs), [realProcs]);
   const wide = useWide();
-  const prefs: ListPrefs = settings.list || defaultListPrefs;
+  const prefs: ListPrefs = { ...defaultListPrefs, ...(settings.list || {}) };
   const setPrefs = (p: Partial<ListPrefs>) => updateSettings({ list: { ...prefs, ...p } });
   const today = todayISO();
 
@@ -36,15 +37,17 @@ export function ListScreen() {
   const proc = procedures.find((p) => p.id === procId) || procedures[0];
   const parsed = parseTime(time);
   const clash = parsed && proc ? overlapping(appointments, date, parsed, proc.durationMin)[0] : undefined;
+  const personal = isPersonalProc(proc);
 
   const add = async () => {
-    if (!name.trim()) { setErr(t.list.needName); nameRef.current?.focus?.(); return; }
+    if (!name.trim() && !personal) { setErr(t.list.needName); nameRef.current?.focus?.(); return; }
     if (!parsed) { setErr(t.list.needTime); timeRef.current?.focus?.(); return; }
     if (!proc) return;
     const price = settings.usePrices ? priceOn(proc, date) : undefined;
     await saveAppointment({
       clientName: name.trim(), date, time: parsed, durationMin: proc.durationMin,
       procedureId: proc.id, procedureName: proc.name, price,
+      personal: personal || undefined, report: personal ? proc.report ?? true : undefined,
     });
     setName(''); setTime(''); setErr('');
     nameRef.current?.focus?.();
@@ -52,7 +55,7 @@ export function ListScreen() {
 
   const rows = useMemo(
     () => sortAppts(filterAppts(appointments, prefs, today, search), prefs.sort),
-    [appointments, prefs.sort, prefs.period, prefs.status, today, search],
+    [appointments, prefs.sort, prefs.period, prefs.status, prefs.kind, today, search],
   );
 
   const opts = <K extends keyof ListPrefs>(key: K, label: string, map: Record<string, string>) => (
@@ -73,8 +76,8 @@ export function ListScreen() {
           {/* rând nou, ca într-o aplicație de taskuri: Enter îl pune în listă */}
           <Card style={{ borderColor: tint(colors.primary, 0.3), borderWidth: 1.5 }}>
             <Row style={{ gap: 8, flexWrap: 'wrap', alignItems: 'stretch' }}>
-              <Input ref={nameRef} value={name} onChangeText={(v) => { setName(v); setErr(''); }} placeholder={t.list.namePh} autoCapitalize="words"
-                style={{ flexGrow: 2, flexBasis: 160 }} onSubmitEditing={() => (parsed ? add() : timeRef.current?.focus?.())} blurOnSubmit={false} />
+              <Input ref={nameRef} value={name} onChangeText={(v) => { setName(v); setErr(''); }} placeholder={personal ? t.personal.where : t.list.namePh} autoCapitalize="words"
+                style={{ flexGrow: 2, flexBasis: 160 }} onSubmitEditing={() => (parsed ? add() : timeRef.current?.focus?.())} accessibilityLabel={personal ? t.personal.where : t.list.namePh} blurOnSubmit={false} />
               <Pressable onPress={() => setPickDate(true)} style={st.dateBtn} accessibilityRole="button" accessibilityLabel={t.list.datePh}>
                 <Ionicons name="calendar" size={18} color={colors.primary} />
                 <Text style={st.dateTxt}>{date === today ? t.today : dateWithYear(date)}</Text>
@@ -86,10 +89,10 @@ export function ListScreen() {
               </Pressable>
             </Row>
             <Row style={{ flexWrap: 'wrap', marginTop: 10 }}>
-              {procedures.map((p) => <Chip key={p.id} small label={p.name} color={p.color} active={p.id === procId} onPress={() => setProcId(p.id)} />)}
+              {procedures.map((p) => <Chip key={p.id} small label={p.name} color={p.color} icon={isPersonalProc(p) ? 'person' : undefined} active={p.id === procId} onPress={() => setProcId(p.id)} />)}
             </Row>
             {err ? <Text style={st.err}>{err}</Text> : <Text style={st.hint}>{t.list.addHint}</Text>}
-            {clash ? <Text style={st.clash}>{t.overlap(clash.clientName, clash.time)}</Text> : null}
+            {clash ? <Text style={st.clash}>{clash.personal ? t.overlapPersonal(apptName(clash), clash.time) : t.overlap(clash.clientName, clash.time)}</Text> : null}
           </Card>
 
           <View style={{ marginTop: 14 }}>
@@ -97,6 +100,7 @@ export function ListScreen() {
             {opts('sort', t.list.sortLbl, t.list.sort)}
             {opts('period', t.list.periodLbl, t.list.period)}
             {opts('status', t.list.statusLbl, t.list.status)}
+            {opts('kind', t.list.kindLbl, t.list.kind)}
           </View>
 
           <Text style={st.count}>{t.list.count(rows.length)}</Text>
@@ -105,12 +109,13 @@ export function ListScreen() {
             const cancelled = a.status === 'anulat';
             const moves = rescheduleCount(a);
             return (
-              <View key={a.id} style={[st.row, wide && { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
-                <Pressable onPress={() => setDetail(a)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }} accessibilityRole="button" accessibilityLabel={`${t.list.edit}: ${a.clientName}`}>
+              <View key={a.id} style={[st.row, a.personal && { borderStyle: 'dashed', borderColor: tint(c, 0.55) }, wide && { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
+                <Pressable onPress={() => setDetail(a)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }} accessibilityRole="button" accessibilityLabel={`${t.list.edit}: ${apptName(a)}`}>
                   <View style={[st.bar, { backgroundColor: cancelled ? '#CFC6D2' : c }]} />
+                  {a.personal ? <Ionicons name="person" size={18} color={cancelled ? colors.muted : c} /> : null}
                   <View style={{ flex: 1 }}>
-                    <Text style={[st.name, cancelled && st.cancelled]} numberOfLines={1}>{a.clientName}</Text>
-                    <Text style={st.sub} numberOfLines={1}>{a.procedureName}{settings.usePrices && a.price !== undefined ? ` · ${a.price} ${t.lei}` : ''}</Text>
+                    <Text style={[st.name, cancelled && st.cancelled]} numberOfLines={1}>{apptName(a)}</Text>
+                    <Text style={st.sub} numberOfLines={1}>{apptSub(a)}{settings.usePrices && a.price !== undefined ? ` · ${a.personal && a.report ? '−' : ''}${a.price} ${t.lei}` : ''}</Text>
                     <Text style={st.when}>{longDate(a.date)} · {a.time}–{endTime(a.time, a.durationMin)}</Text>
                     <Row style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                       {a.status !== 'programat' ? <View style={[st.badge, a.status === 'finalizat' && { backgroundColor: tint(colors.success, 0.12) }]}><Text style={[st.badgeTxt, a.status === 'finalizat' && { color: colors.success }]}>{t.statuses[a.status]}</Text></View> : null}

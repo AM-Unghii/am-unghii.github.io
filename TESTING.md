@@ -2,6 +2,21 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.5.1 — rezervă o perioadă
+1. Programare nouă → „Personală (a mea)” → „Rezervă mai multe zile…” → „Săptămâna viitoare”, nume „Săptămâna verde” → „Rezervă zilele”: 5 blocuri luni–vineri în calendar.
+2. Programare pentru o clientă în una din zile → avertizare de suprapunere cu „Săptămâna verde”.
+
+## 1.5.0 — culori, programări personale, cheltuieli
+Înainte: Setări, jos: „Versiune 1.5.0”. Cu sincronizare: lipește noul Code.gs în Apps Script și publică o versiune nouă.
+1. Setări → Serviciile mele → un serviciu → 20 de culori; alegi una → Salvează → calendarul și lista folosesc culoarea nouă.
+2. Setări → „Adaugă serviciu” → Tip „Personal”, nume „Coafor”, culoare → Salvează. În listă apare cu iconiță de persoană și „personal”.
+3. Program → apeși pe o oră → sus „Personală (a mea)” → alegi „Coafor”, scrii „Salon Bella” (sau nimic), preț 150 → Salvează. În calendar apare cu chenar punctat și iconiță.
+4. Programare nouă pentru o clientă în aceeași oră → „Atenție: atunci ai o programare personală: Salon Bella (…)”. Lista „În ziua aceea” arată programarea personală (evidențiată).
+5. Tab „Programări” → filtrul „Tip” → „Personale” arată doar programarea ta. Rândul rapid: alegi „Coafor”, fără nume, scrii ora, Enter → se adaugă.
+6. Rapoarte (cu prețuri pornite) → Încasări, Cheltuieli −150, „Rămâne”; secțiunea „Cheltuieli (programări personale)”. Numărul de programări nu include programarea ta.
+7. Deschizi programarea personală → oprești „Intră în rapoarte ca cheltuială” → Salvează → dispare din cheltuieli.
+8. Cu sincronizarea: pe al doilea dispozitiv programarea apare ca personală; Google Calendar: „Coafor · Salon Bella”.
+
 ## 1.4.0 — tab „Programări”, reprogramare, anulare, ștergere
 Înainte: Setări, jos: „Versiune 1.4.0”. Dacă folosești Google Calendar/sincronizare: lipește noul Code.gs în Apps Script și publică o versiune nouă.
 1. Tab „Programări”: rândul de sus — scrii nume, alegi data, scrii ora (ex. 1430 sau 14:30), Enter → apare în listă. Fără nume sau oră: mesaj de eroare.

@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { Appointment, Settings } from '../types';
 import { apptStart } from '../utils/date';
 import { t } from '../i18n';
+import { apptName } from '../utils/appts';
 
 const isNative = Platform.OS !== 'web';
 const MAX_SCHEDULED = 60; // iOS permite maxim 64 notificări programate
@@ -61,8 +62,8 @@ export async function rescheduleReminders(appts: Appointment[], settings: Settin
     for (const { a, at } of upcoming) {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${a.time} · ${a.clientName}`,
-          body: a.procedureName + (a.notes ? ` — ${a.notes}` : ''),
+          title: `${a.time} · ${apptName(a)}`,
+          body: (a.personal && a.clientName ? a.procedureName : a.personal ? t.personal.badge : a.procedureName) + (a.notes ? ` — ${a.notes}` : ''),
           sound: true,
           data: { kind: 'appt', id: a.id },
         },

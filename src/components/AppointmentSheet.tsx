@@ -1,16 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Btn, Chip, Input, Label, Row, Sheet } from './ui';
+import { Btn, Chip, Input, Label, Row, Segmented, Sheet } from './ui';
 import { DatePicker } from './DatePicker';
 import { ApptActions } from './ApptActions';
+import { PeriodSheet } from './PeriodSheet';
 import { useApp } from '../store/AppContext';
 import { Appointment } from '../types';
-import { colors, radius, font } from '../theme';
+import { colors, radius, font, tint } from '../theme';
 import { t } from '../i18n';
 import { endTime, longDate, toMin, todayISO } from '../utils/date';
 import { openGoogleCalendar } from '../services/calendar';
 import { priceOn } from '../utils/prices';
+import { apptName, isPersonalProc, overlapping, withPersonalFallback } from '../utils/appts';
+import { apptSub, procColor } from './ApptRow';
 
 export interface SheetTarget {
   /** programare existentă (modificare) */
@@ -18,6 +21,8 @@ export interface SheetTarget {
   /** valori inițiale pentru programare nouă */
   date?: string;
   time?: string;
+  /** programare personală nouă */
+  personal?: boolean;
 }
 
 const MINUTES = ['00', '15', '30', '45'];
@@ -32,8 +37,12 @@ function confirm(title: string, body: string, ok: string, onOk: () => void) {
 }
 
 export function AppointmentSheet({ target, onClose }: { target: SheetTarget | null; onClose: () => void }) {
-  const { appointments, procedures, settings, saveAppointment, deleteAppointment, setStatus } = useApp();
+  const { appointments, procedures: realProcs, settings, saveAppointment, deleteAppointment, setStatus } = useApp();
   const editing = target?.appt;
+  const procedures = useMemo(() => withPersonalFallback(realProcs), [realProcs]);
+  const [period, setPeriod] = useState(false);
+  const [personal, setPersonal] = useState(false);
+  const [report, setReport] = useState(true);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -54,11 +63,14 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
     setError('');
     const a = target.appt;
     if (a) {
+      setPersonal(!!a.personal); setReport(a.report ?? true);
       setName(a.clientName); setPhone(a.phone || ''); setProcId(a.procedureId); setDate(a.date);
       setHour(Number(a.time.slice(0, 2))); setMinute(a.time.slice(3)); setDur(a.durationMin);
       setPrice(a.price !== undefined ? String(a.price) : ''); setAutoPrice(a.price !== undefined ? '\u0000' : ''); setNotes(a.notes || '');
     } else {
-      const p = procedures[0];
+      const wantPersonal = !!target.personal;
+      const p = procedures.find((x) => isPersonalProc(x) === wantPersonal) || procedures[0];
+      setPersonal(wantPersonal); setReport(p.report ?? true);
       setName(''); setPhone(''); setProcId(p.id); setDate(target.date || todayISO());
       const tm = target.time || '10:00';
       setHour(Number(tm.slice(0, 2))); setMinute(tm.slice(3)); setDur(p.durationMin);
@@ -70,13 +82,15 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
   const time = `${String(hour).padStart(2, '0')}:${minute}`;
   const proc = procedures.find((p) => p.id === procId);
 
-  const overlap = useMemo(() => {
-    const s = toMin(time);
-    const e = s + dur;
-    return appointments.find(
-      (x) => x.id !== editing?.id && x.date === date && x.status !== 'anulat' && toMin(x.time) < e && toMin(x.time) + x.durationMin > s,
-    );
-  }, [appointments, date, time, dur, editing]);
+  // programările personale contează și ele: în acel timp nu poți lucra
+  const clashes = useMemo(() => overlapping(appointments, date, time, dur, editing?.id), [appointments, date, time, dur, editing]);
+  const overlap = clashes[0];
+  /** tot ce mai e în ziua aleasă (cliente + programările tale), ca să vezi când ești liberă */
+  const dayList = useMemo(
+    () => appointments.filter((x) => x.id !== editing?.id && x.date === date && x.status !== 'anulat').sort((x, y) => x.time.localeCompare(y.time)),
+    [appointments, date, editing],
+  );
+  const kindProcs = procedures.filter((p) => isPersonalProc(p) === personal);
 
   /** prețul serviciului valabil la data programării (doar dacă prețul nu a fost scris de mână) */
   const refillPrice = (pid: string, d: string) => {
@@ -89,19 +103,36 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
   const pickProc = (id: string) => {
     setProcId(id);
     const p = procedures.find((x) => x.id === id);
-    if (p) setDur(p.durationMin);
+    if (p) { setDur(p.durationMin); if (personal) setReport(p.report ?? true); }
     refillPrice(id, date);
   };
 
   const pickDate2 = (d: string) => { setDate(d); refillPrice(procId, d); };
 
+  const pickKind = (k: 'client' | 'personal') => {
+    const want = k === 'personal';
+    if (want === personal) return;
+    setPersonal(want);
+    setError('');
+    const p = procedures.find((x) => isPersonalProc(x) === want);
+    if (!p) return;
+    setProcId(p.id); setDur(p.durationMin); setReport(p.report ?? true);
+    if (settings.usePrices && price === autoPrice) {
+      const v = priceOn(p, date);
+      const str = v !== undefined ? String(v) : '';
+      setPrice(str); setAutoPrice(str);
+    }
+  };
+
   const save = async () => {
-    if (!name.trim()) { setError(t.nameRequired); return; }
+    if (!name.trim() && !personal) { setError(t.nameRequired); return; }
     const pr = price.trim() ? Number(price.replace(',', '.')) : undefined;
     await saveAppointment({
       id: editing?.id,
       clientName: name.trim(),
-      phone: phone.trim() || undefined,
+      phone: personal ? undefined : phone.trim() || undefined,
+      personal: personal || undefined,
+      report: personal ? report : undefined,
       date, time, durationMin: dur,
       procedureId: procId,
       procedureName: proc?.name || editing?.procedureName || '',
@@ -116,17 +147,25 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
 
   return (
     <>
-      <Sheet visible={!!target} onClose={onClose} title={editing ? t.editAppt : t.newAppt}>
-        <Label>{t.name}</Label>
-        <Input value={name} onChangeText={(v) => { setName(v); setError(''); }} placeholder={t.namePh} autoCapitalize="words" autoFocus={!editing} />
+      <PeriodSheet visible={period} date={date} onClose={() => setPeriod(false)} onDone={() => { setPeriod(false); onClose(); }} />
+      <Sheet visible={!!target && !period} onClose={onClose}
+        title={personal ? (editing ? t.personal.editTitle : t.personal.newTitle) : editing ? t.editAppt : t.newAppt}>
+        <Segmented items={[{ key: 'client', label: t.personal.forClient }, { key: 'personal', label: t.personal.mine }]}
+          value={personal ? 'personal' : 'client'} onChange={pickKind} />
+
+        <Label>{personal ? t.personal.where : t.name}</Label>
+        <Input value={name} onChangeText={(v) => { setName(v); setError(''); }} placeholder={personal ? t.personal.wherePh : t.namePh}
+          autoCapitalize="words" autoFocus={!editing && !personal} />
         {error ? <Text style={st.err}>{error}</Text> : null}
 
-        <Label>{t.procedure}</Label>
+        <Label>{personal ? t.personal.what : t.procedure}</Label>
         <Row style={{ flexWrap: 'wrap' }}>
-          {procedures.map((p) => (
-            <Chip key={p.id} label={p.name} color={p.color} active={p.id === procId} onPress={() => pickProc(p.id)} />
+          {kindProcs.map((p) => (
+            <Chip key={p.id} label={p.name} color={p.color} icon={personal ? 'person' : undefined} active={p.id === procId} onPress={() => pickProc(p.id)} />
           ))}
         </Row>
+        {personal && !editing ? <Btn kind="soft" icon="calendar-outline" label={t.period.open} onPress={() => setPeriod(true)} style={{ marginTop: 10 }} /> : null}
+        {personal && !realProcs.some(isPersonalProc) ? <Text style={st.hint}>{t.personal.moreHint}</Text> : null}
 
         <Label>{t.date}</Label>
         <Pressable onPress={() => setPickDate(true)} style={st.dateBtn} accessibilityRole="button">
@@ -149,9 +188,27 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
         {overlap ? (
           <View style={st.warn}>
             <Ionicons name="warning" size={18} color={colors.warn} />
-            <Text style={st.warnText}>{t.overlap(overlap.clientName, overlap.time)}</Text>
+            <Text style={st.warnText}>{overlap.personal ? t.overlapPersonal(apptName(overlap), overlap.time) : t.overlap(overlap.clientName, overlap.time)}</Text>
           </View>
         ) : null}
+
+        <Label>{t.personal.dayList}</Label>
+        {dayList.length === 0 ? <Text style={st.hint}>{t.personal.dayFree}</Text> : (
+          <View style={st.day}>
+            {dayList.map((x) => {
+              const c = procColor(x, realProcs);
+              const hit = clashes.some((y) => y.id === x.id);
+              return (
+                <View key={x.id} style={[st.dayRow, x.personal && st.dayPersonal, hit && { backgroundColor: colors.warnSoft }]}>
+                  <View style={[st.dayBar, { backgroundColor: c }]} />
+                  <Text style={st.dayTime}>{x.time}–{endTime(x.time, x.durationMin)}</Text>
+                  {x.personal ? <Ionicons name="person" size={13} color={c} /> : null}
+                  <Text style={st.dayName} numberOfLines={1}>{apptName(x)} <Text style={st.daySub}>· {apptSub(x)}</Text></Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         <Label>{t.duration}</Label>
         <Row style={{ flexWrap: 'wrap' }}>
@@ -162,13 +219,26 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
 
         {settings.usePrices ? (
           <>
-            <Label>{t.price}</Label>
+            <Label>{personal ? t.personal.price : t.price}</Label>
             <Input value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder={`ex. 120 ${t.lei}`} />
+            {personal ? (
+              <Row style={{ justifyContent: 'space-between', marginTop: 12 }}>
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <Text style={st.swLbl}>{t.personal.report}</Text>
+                  <Text style={st.hint}>{t.personal.reportHint}</Text>
+                </View>
+                <Switch value={report} onValueChange={setReport} trackColor={{ true: colors.primary, false: '#DDD3DF' }} />
+              </Row>
+            ) : null}
           </>
         ) : null}
 
-        <Label>{t.phone}</Label>
-        <Input value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="07xx xxx xxx" />
+        {!personal ? (
+          <>
+            <Label>{t.phone}</Label>
+            <Input value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="07xx xxx xxx" />
+          </>
+        ) : null}
 
         <Label>{t.notes}</Label>
         <Input value={notes} onChangeText={setNotes} multiline style={{ minHeight: 76, paddingTop: 14, textAlignVertical: 'top' }} />
@@ -210,4 +280,13 @@ const st = StyleSheet.create({
   dateText: { flex: 1, fontSize: 17, ...font.w600, color: colors.ink },
   warn: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: colors.warnSoft, padding: 12, borderRadius: radius.md, marginTop: 10 },
   warnText: { flex: 1, color: '#7A5600', ...font.w600, fontSize: 14 },
+  hint: { color: colors.muted, fontSize: 13, marginTop: 6, ...font.reg },
+  swLbl: { fontSize: 16, color: colors.ink, ...font.w600 },
+  day: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
+  dayRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingRight: 10, borderTopWidth: 1, borderTopColor: colors.line, marginTop: -1 },
+  dayPersonal: { backgroundColor: tint(colors.muted, 0.06) },
+  dayBar: { width: 4, alignSelf: 'stretch' },
+  dayTime: { fontSize: 13, color: colors.ink, ...font.w800, minWidth: 92 },
+  dayName: { flex: 1, fontSize: 14, color: colors.ink, ...font.w600 },
+  daySub: { color: colors.muted, ...font.reg },
 });

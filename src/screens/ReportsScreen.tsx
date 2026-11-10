@@ -9,6 +9,7 @@ import {
 } from '../utils/date';
 import { Btn, Card, Hero, IconBtn, Row, Segmented, useWide } from '../components/ui';
 import { DatePicker } from '../components/DatePicker';
+import { procColor } from '../components/ApptRow';
 
 type Kind = 'azi' | 'saptamana' | 'luna' | 'an' | 'custom';
 const KINDS: Kind[] = ['azi', 'saptamana', 'luna', 'an', 'custom'];
@@ -39,8 +40,11 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
     else if (kind === 'an') setAnchor(addYears(anchor, dir));
   };
 
-  const live = appointments.filter((x) => x.date >= a && x.date <= b && x.status !== 'anulat');
-  const inPeriod = appointments.filter((x) => x.date >= a && x.date <= b);
+  // programările cu cliente = încasări; cele personale (cu „Intră în rapoarte”) = cheltuieli
+  const live = appointments.filter((x) => x.date >= a && x.date <= b && x.status !== 'anulat' && !x.personal);
+  const inPeriod = appointments.filter((x) => x.date >= a && x.date <= b && !x.personal);
+  const expenses = appointments.filter((x) => x.date >= a && x.date <= b && x.status !== 'anulat' && x.personal && x.report && x.price !== undefined);
+  const spent = expenses.reduce((s, x) => s + (x.price || 0), 0);
   const cancelledN = inPeriod.filter((x) => x.status === 'anulat').length;
   const movedN = inPeriod.filter((x) => (x.reschedules?.length || 0) > 0).length;
   const movesN = inPeriod.reduce((sum, x) => sum + (x.reschedules?.length || 0), 0);
@@ -57,6 +61,17 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
     });
     return Array.from(m.values()).sort((x, y) => y.sum - x.sum || y.n - x.n);
   }, [live, procedures]);
+  const byExpense = useMemo(() => {
+    const m = new Map<string, { name: string; color: string; n: number; sum: number }>();
+    expenses.forEach((x) => {
+      const k = x.procedureName || t.personal.defaultName;
+      const cur = m.get(k) || { name: k, color: procColor(x, procedures), n: 0, sum: 0 };
+      cur.n++; cur.sum += x.price || 0;
+      m.set(k, cur);
+    });
+    return Array.from(m.values()).sort((x, y) => y.sum - x.sum);
+  }, [expenses, procedures]);
+  const maxE = Math.max(1, ...byExpense.map((p) => p.sum));
   const maxN = Math.max(1, ...byProc.map((p) => (settings.usePrices ? p.sum || p.n : p.n)));
   const fmt = (n: number) => (Math.round(n * 100) / 100).toLocaleString('ro-RO');
 
@@ -84,9 +99,21 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
 
       {settings.usePrices ? (
         <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.hero}>
-          <Text style={st.heroLbl}>{t.reports.total}</Text>
+          <Text style={st.heroLbl}>{expenses.length ? t.reports.income : t.reports.total}</Text>
           <Text style={st.heroVal}>{fmt(total)} <Text style={st.heroUnit}>{t.lei}</Text></Text>
           <Text style={st.heroSub}>{priced.length} {t.reports.withPrice}</Text>
+          {expenses.length ? (
+            <View style={st.netBox}>
+              <Row style={{ justifyContent: 'space-between' }}>
+                <Text style={st.netLbl}>{t.reports.expenses} · {t.reports.expenseCount(expenses.length)}</Text>
+                <Text style={st.netVal}>−{fmt(spent)} {t.lei}</Text>
+              </Row>
+              <Row style={{ justifyContent: 'space-between', marginTop: 6 }}>
+                <Text style={st.netLbl}>{t.reports.net}</Text>
+                <Text style={[st.netVal, { fontSize: 20 }]}>{fmt(total - spent)} {t.lei}</Text>
+              </Row>
+            </View>
+          ) : null}
         </LinearGradient>
       ) : (
         <Card style={{ backgroundColor: colors.primarySoft }}>
@@ -125,7 +152,24 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
           ))}
         </Card>
       )}
+      {settings.usePrices && byExpense.length ? (
+        <>
+          <Text style={st.sec}>{t.reports.byExpense}</Text>
+          <Card>
+            {byExpense.map((p, i) => (
+              <View key={p.name} style={[{ paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: colors.line }]}>
+                <Row style={{ justifyContent: 'space-between' }}>
+                  <Text style={st.pName}>{p.name}</Text>
+                  <Text style={[st.pVal, { color: colors.muted }]}>−{fmt(p.sum)} {t.lei} · {p.n}×</Text>
+                </Row>
+                <View style={st.track}><View style={[st.fill, { backgroundColor: p.color, width: `${(p.sum / maxE) * 100}%` }]} /></View>
+              </View>
+            ))}
+          </Card>
+        </>
+      ) : null}
       {settings.usePrices ? <Text style={st.note}>{t.reports.note}</Text> : null}
+      {settings.usePrices ? <Text style={st.note}>{t.reports.personalNote}</Text> : null}
       <Text style={st.note}>{t.reports.noteStatus}</Text>
 
       <DatePicker
@@ -162,5 +206,8 @@ const st = StyleSheet.create({
   pVal: { fontSize: 15, ...font.w700, color: colors.primaryDark },
   track: { height: 8, borderRadius: 4, backgroundColor: '#F3ECEF', marginTop: 8, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
+  netBox: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)' },
+  netLbl: { color: '#FFD9E6', fontSize: 14, ...font.w600, flex: 1 },
+  netVal: { color: '#fff', fontSize: 17, ...font.w800 },
   note: { color: colors.muted, fontSize: 13, marginTop: 14, lineHeight: 19, ...font.reg },
 });

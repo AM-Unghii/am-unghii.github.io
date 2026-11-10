@@ -1,7 +1,39 @@
-import { Appointment, ListPrefs, Reschedule } from '../types';
+import { Appointment, ListPrefs, Procedure, Reschedule } from '../types';
 import { addDays, startOfWeek, toMin } from './date';
+import { personalColor } from '../theme';
+import { t } from '../i18n';
 
-export const defaultListPrefs: ListPrefs = { sort: 'data', period: 'viitoare', status: 'toate' };
+export const defaultListPrefs: ListPrefs = { sort: 'data', period: 'viitoare', status: 'toate', kind: 'toate' };
+
+/** Serviciul folosit pentru programările personale când nu există niciunul de tip „personal”. */
+export const PERSONAL_ID = 'p-personal';
+
+export const isPersonalProc = (p?: Procedure) => p?.kind === 'personal';
+
+/** Lista de servicii + unul personal implicit, dacă utilizatoarea nu are încă niciun serviciu personal. */
+export function withPersonalFallback(procs: Procedure[]): Procedure[] {
+  if (procs.some(isPersonalProc)) return procs;
+  return [...procs, { id: PERSONAL_ID, name: t.personal.defaultName, durationMin: 60, color: personalColor, kind: 'personal', report: true }];
+}
+
+/**
+ * Completează `personal` / `report` din serviciu acolo unde lipsesc (ex. venite de la un script vechi
+ * care nu are încă coloanele noi). Nu schimbă nimic dacă sunt deja puse.
+ */
+export function withKind(a: Appointment, procs: Procedure[]): Appointment {
+  if (a.personal !== undefined && (!a.personal || a.report !== undefined)) return a;
+  const p = procs.find((x) => x.id === a.procedureId);
+  const personal = a.personal ?? (isPersonalProc(p) || a.procedureId === PERSONAL_ID);
+  if (!personal) return a.personal === undefined ? a : { ...a, personal: undefined };
+  return { ...a, personal: true, report: a.report ?? p?.report ?? true };
+}
+
+/** Numele afișat: clienta sau, la personale, locul / titlul (ori serviciul dacă lipsește). */
+export const apptName = (a: Appointment) => (a.personal ? a.clientName || a.procedureName : a.clientName);
+
+/** Titlul din calendar / notificări. */
+export const apptTitle = (a: Appointment) =>
+  a.personal ? (a.clientName ? `${a.procedureName} · ${a.clientName}` : a.procedureName) : `${a.clientName} · ${a.procedureName}`;
 
 /** „YYYY-MM-DD HH:mm” */
 export const slotKey = (date: string, time: string) => `${date} ${time}`;
@@ -48,6 +80,8 @@ export function filterAppts(list: Appointment[], p: ListPrefs, today: string, se
     if (p.period === 'azi' && a.date !== today) return false;
     if (p.period === 'saptamana' && (a.date < ws || a.date > we)) return false;
     if (p.period === 'trecute' && a.date >= today) return false;
+    if (p.kind === 'cliente' && a.personal) return false;
+    if (p.kind === 'personale' && !a.personal) return false;
     if (p.status === 'reprogramate' ? !rescheduleCount(a) : p.status !== 'toate' && a.status !== p.status) return false;
     if (q && !norm([a.clientName, a.phone || '', a.procedureName, a.notes || ''].join(' ')).includes(q)) return false;
     return true;
@@ -60,7 +94,7 @@ export function sortAppts(list: Appointment[], sort: ListPrefs['sort']): Appoint
   const cmp: Record<ListPrefs['sort'], (x: Appointment, y: Appointment) => number> = {
     data: (x, y) => when(x).localeCompare(when(y)),
     dataDesc: (x, y) => when(y).localeCompare(when(x)),
-    nume: (x, y) => x.clientName.localeCompare(y.clientName, 'ro') || when(x).localeCompare(when(y)),
+    nume: (x, y) => apptName(x).localeCompare(apptName(y), 'ro') || when(x).localeCompare(when(y)),
     procedura: (x, y) => x.procedureName.localeCompare(y.procedureName, 'ro') || when(x).localeCompare(when(y)),
     adaugate: (x, y) => y.createdAt.localeCompare(x.createdAt),
   };
