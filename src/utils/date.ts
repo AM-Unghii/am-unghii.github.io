@@ -68,6 +68,8 @@ export function longDate(iso: string): string {
 export function shortDate(iso: string): string {
   return `${dayNum(iso)} ${t.monthsShort[monthIdx(iso)]}`;
 }
+/** „3 nov 2026” */
+export const dateWithYear = (iso: string) => `${shortDate(iso)} ${iso.slice(0, 4)}`;
 export function monthYear(iso: string): string {
   return `${cap(t.months[monthIdx(iso)])} ${iso.slice(0, 4)}`;
 }

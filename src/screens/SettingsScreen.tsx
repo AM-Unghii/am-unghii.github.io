@@ -6,7 +6,10 @@ import { NotifyVia, Procedure, ViewMode } from '../types';
 import { colors, font, procedureColors, tint } from '../theme';
 import { t } from '../i18n';
 import { Btn, Chip, Hero, Input, Label, Row, Section, Sheet, useWide } from '../components/ui';
-import { uid } from '../utils/date';
+import { dateWithYear, todayISO, uid } from '../utils/date';
+import { DatePicker } from '../components/DatePicker';
+import { addPrice, affectedByPrice, priceHistory, priceOn } from '../utils/prices';
+import { APP_VERSION, BUILD_ID } from '../version';
 import { exportExcel, pickAndParseExcel } from '../services/excel';
 import { DeviceCalendar, ensureCalendarPermission, listWritableCalendars } from '../services/calendar';
 import { ensureNotificationPermission } from '../services/notifications';
@@ -15,8 +18,19 @@ import { defaultSettings } from '../store/storage';
 
 const say = (msg: string) => (Platform.OS === 'web' ? window.alert(msg) : Alert.alert(t.appName, msg));
 
+/** întrebare da/nu (pe web: confirm din browser) */
+function ask(title: string, body: string, yes: string, no: string, onYes: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${body}`)) onYes();
+  } else {
+    Alert.alert(title, body, [{ text: no, style: 'cancel' }, { text: yes, onPress: onYes }]);
+  }
+}
+
+type PriceChange = { from: string; price: number };
+
 export function SettingsScreen() {
-  const { appointments, procedures, settings, updateSettings, saveProcedure, deleteProcedure, importAppointments, savedAt,
+  const { appointments, procedures, settings, updateSettings, saveProcedure, deleteProcedure, repriceAppointments, importAppointments, savedAt,
     syncConnected, syncStatus, syncError, lastSyncAt, syncNow, connectSync, disconnectSync, calendarError, sendTest } = useApp();
   const wide = useWide();
   const isWeb = Platform.OS === 'web';
@@ -83,6 +97,20 @@ export function SettingsScreen() {
       const { added, updated } = importAppointments(r.appointments, r.newProcedures);
       setMsg(t.settings.imported(added, updated));
     } catch { setMsg(t.settings.importFail); }
+  };
+
+  const onSaveService = (p: Procedure, change?: PriceChange) => {
+    const before = procedures.find((x) => x.id === p.id);
+    saveProcedure(p);
+    setEditing(null);
+    if (!change || !before) return;
+    const list = affectedByPrice(appointments, before, change.from, todayISO()).filter((a) => a.price !== change.price);
+    if (!list.length) return;
+    const start = change.from > todayISO() ? change.from : todayISO();
+    ask(t.settings.repriceTitle, t.settings.repriceBody(list.length, change.price, dateWithYear(start)), t.settings.repriceYes, t.settings.repriceNo, () => {
+      repriceAppointments(list.map((a) => a.id), change.price);
+      say(t.settings.repriceDone(list.length));
+    });
   };
 
   return (
@@ -194,7 +222,7 @@ export function SettingsScreen() {
             <View style={[st.dot, { backgroundColor: p.color }]} />
             <View style={{ flex: 1 }}>
               <Text style={st.rowText}>{p.name}</Text>
-              <Text style={st.sub}>{p.durationMin} {t.min}{settings.usePrices && p.price !== undefined ? ` · ${p.price} ${t.lei}` : ''}</Text>
+              <Text style={st.sub}>{p.durationMin} {t.min}{settings.usePrices ? priceLabel(p) : ''}</Text>
             </View>
             <Ionicons name="create-outline" size={22} color={colors.muted} />
           </Pressable>
@@ -251,26 +279,52 @@ export function SettingsScreen() {
         <Text style={st.sub}>{appointments.length} programări salvate{savedAt ? ` · ${t.settings.lastSave}: ${new Date(savedAt).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}` : ''}</Text>
       </Section>
 
+      <Text style={st.version}>{t.settings.version} {APP_VERSION}{BUILD_ID ? ` · ${BUILD_ID}` : ''}</Text>
+
       <ServiceSheet proc={editing} usePrices={settings.usePrices} canDelete={procedures.length > 1}
-        onClose={() => setEditing(null)} onSave={(p) => { saveProcedure(p); setEditing(null); }} onDelete={(id) => { deleteProcedure(id); setEditing(null); }} />
+        onClose={() => setEditing(null)} onSave={onSaveService} onDelete={(id) => { deleteProcedure(id); setEditing(null); }} />
       </View>
     </ScrollView>
   );
 }
 
+/** „ · 120 lei”, plus prețul care urmează, dacă există */
+function priceLabel(p: Procedure): string {
+  const today = todayISO();
+  const now = priceOn(p, today);
+  const next = priceHistory(p).find((x) => x.from > today);
+  if (now === undefined && !next) return '';
+  return `${now !== undefined ? ` · ${now} ${t.lei}` : ''}${next ? ` · ${t.settings.priceNext(next.price, dateWithYear(next.from))}` : ''}`;
+}
+
 function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }: {
-  proc: Procedure | null; usePrices: boolean; canDelete: boolean; onClose: () => void; onSave: (p: Procedure) => void; onDelete: (id: string) => void;
+  proc: Procedure | null; usePrices: boolean; canDelete: boolean; onClose: () => void; onSave: (p: Procedure, change?: PriceChange) => void; onDelete: (id: string) => void;
 }) {
   const [name, setName] = useState('');
   const [dur, setDur] = useState(60);
   const [price, setPrice] = useState('');
+  const [from, setFrom] = useState(todayISO());
+  const [pickFrom, setPickFrom] = useState(false);
   const [color, setColor] = useState(procedureColors[0]);
   React.useEffect(() => {
-    if (proc) { setName(proc.name); setDur(proc.durationMin); setPrice(proc.price !== undefined ? String(proc.price) : ''); setColor(proc.color); }
+    if (proc) { setName(proc.name); setDur(proc.durationMin); setPrice(''); setFrom(todayISO()); setColor(proc.color); }
   }, [proc]);
   if (!proc) return null;
+  const today = todayISO();
+  const history = priceHistory(proc);
+  const current = priceOn(proc, today);
+  const currentFrom = history.filter((x) => x.from <= today).pop()?.from;
   const pr = price.trim() ? Number(price.replace(',', '.')) : undefined;
+  const validPrice = pr !== undefined && Number.isFinite(pr) && pr >= 0;
+
+  const save = () => {
+    const base: Procedure = { ...proc, name: name.trim(), durationMin: dur, color };
+    if (usePrices && validPrice) onSave(addPrice(base, from, pr, today), { from: history.length ? from : '', price: pr });
+    else onSave(base);
+  };
+
   return (
+    <>
     <Sheet visible onClose={onClose} title={t.settings.services}>
       <Label>{t.settings.serviceName}</Label>
       <Input value={name} onChangeText={setName} autoFocus={!proc.name} />
@@ -278,17 +332,49 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
       <Row style={{ flexWrap: 'wrap' }}>
         {[30, 45, 60, 90, 120, 150].map((d) => <Chip key={d} small label={`${d} ${t.min}`} active={d === dur} onPress={() => setDur(d)} />)}
       </Row>
-      {usePrices ? (<><Label>{t.settings.servicePrice}</Label><Input value={price} onChangeText={setPrice} keyboardType="decimal-pad" /></>) : null}
+      {usePrices ? (
+        <>
+          {history.length ? (
+            <>
+              <Label>{t.settings.priceHistory}</Label>
+              {[...history].reverse().map((h) => {
+                const isNow = h.from === currentFrom;
+                return (
+                  <View key={h.from || 'mereu'} style={st.histRow}>
+                    <Text style={[st.histPrice, isNow && { color: colors.primaryDark }]}>{h.price} {t.lei}</Text>
+                    <Text style={st.sub}>
+                      {h.from ? t.settings.priceSince(dateWithYear(h.from)) : t.settings.priceAlways}{h.from > today ? ` · ${t.settings.priceUpcoming}` : ''}
+                    </Text>
+                  </View>
+                );
+              })}
+            </>
+          ) : null}
+          <Label>{history.length ? t.settings.priceNew : t.settings.servicePrice}</Label>
+          <Input value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder={current !== undefined ? `${current} ${t.lei}` : `ex. 120 ${t.lei}`} />
+          {history.length ? (
+            <>
+              <Label>{t.settings.priceFrom}</Label>
+              <Pressable onPress={() => setPickFrom(true)} style={st.dateBtn} accessibilityRole="button">
+                <Ionicons name="calendar" size={20} color={colors.primary} />
+                <Text style={st.rowText}>{dateWithYear(from)}</Text>
+              </Pressable>
+            </>
+          ) : null}
+          <Text style={[st.sub, { marginTop: 8 }]}>{t.settings.priceHint}</Text>
+        </>
+      ) : null}
       <Label>Culoare</Label>
       <Row>
         {procedureColors.map((c) => (
           <Pressable key={c} onPress={() => setColor(c)} style={[st.swatch, { backgroundColor: c }, c === color && st.swatchOn]} accessibilityLabel={c} />
         ))}
       </Row>
-      <Btn label={t.save} icon="checkmark" style={{ marginTop: 24 }} disabled={!name.trim()}
-        onPress={() => onSave({ ...proc, name: name.trim(), durationMin: dur, price: pr !== undefined && Number.isFinite(pr) ? pr : undefined, color })} />
+      <Btn label={t.save} icon="checkmark" style={{ marginTop: 24 }} disabled={!name.trim()} onPress={save} />
       {canDelete ? <Btn kind="danger" icon="trash-outline" label={t.settings.delService} style={{ marginTop: 10 }} onPress={() => onDelete(proc.id)} /> : null}
     </Sheet>
+    <DatePicker visible={pickFrom} value={from} onPick={setFrom} onClose={() => setPickFrom(false)} title={t.settings.priceFrom} />
+    </>
   );
 }
 
@@ -307,4 +393,8 @@ const st = StyleSheet.create({
   swatchOn: { borderColor: colors.ink },
   logoBox: { alignSelf: 'center', padding: 14, borderRadius: 22, backgroundColor: colors.plum },
   logoImg: { width: 140, height: 140 },
+  histRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line },
+  histPrice: { fontSize: 17, ...font.w700, color: colors.ink },
+  dateBtn: { minHeight: 50, borderRadius: 14, borderWidth: 1.5, borderColor: colors.line, backgroundColor: '#fff', paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  version: { textAlign: 'center', fontSize: 13, color: colors.muted, marginTop: 8, marginBottom: 16, ...font.reg },
 });
