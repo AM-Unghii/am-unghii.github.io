@@ -1,5 +1,10 @@
 # Changelog
 
+## Nelansat
+- Iconița aplicației: „A.M.” și „Unghii” pe două rânduri, scris puțin îngroșat, cam de 2 ori mai mare decât înainte; „MANICHIURĂ” scos din iconiță (nu se citea). Toate variantele (fără fundal, alb pătrat, alb rotund), iconița iPhone, favicon și iconițele Android native.
+- Manifest: iconițe „maskable” pentru varianta cu fundal alb (Android le umple forma, fără ramă albă micșorată).
+- Teste: generare iconițe OK, verificate vizual la 512 și 96 px. Netestat pe telefon real.
+
 ## 1.2.0 — 2026-11-02
 - Aspect nou: fonturi Playfair Display + Manrope, antete cu degradeu prună–roz, accente aurii, carduri cu inițiale, bară de jos plutitoare, ferestre centrate pe calculator.
 - Browser pe calculator: bară laterală (logo, „Programare nouă”, meniu, stare sincronizare), calendar mai înalt, panou „Azi” (statistici, următoarea clientă, programul zilei); luna și anul pe mai multe coloane.
