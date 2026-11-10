@@ -2,6 +2,9 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.3.3 — istoric „de la cât la cât”
+1. Setări → serviciu cu preț 100 → Preț nou 120, Valabil de la o dată viitoare → Salvează → redeschizi: rândul de sus arată „100 → 120 lei”, „de la <data> · urmează” și „schimbat pe <azi>”.
+
 ## 1.3.2 — „Valabil de la” la primul preț
 1. Setări → un serviciu fără preț → apar „Preț obișnuit” și „Valabil de la” (azi).
 2. Scrii 100, alegi o dată → Salvează → redeschizi serviciul: „Istoric prețuri: 100 lei · de la <data>”.
