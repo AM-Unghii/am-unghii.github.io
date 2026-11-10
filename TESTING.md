@@ -2,6 +2,11 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.3.4 — istoric în Setări
+1. Setări → „Folosesc prețuri” pornit, fără prețuri → sub comutator: „Încă nu ai trecut prețuri…”.
+2. Pui preț la un serviciu, apoi un preț nou → în „Istoric prețuri (toate serviciile)” apar ambele rânduri, cel nou sus, cu „100 → 120 lei”.
+3. Apeși pe un rând → se deschide serviciul.
+
 ## 1.3.3 — istoric „de la cât la cât”
 1. Setări → serviciu cu preț 100 → Preț nou 120, Valabil de la o dată viitoare → Salvează → redeschizi: rândul de sus arată „100 → 120 lei”, „de la <data> · urmează” și „schimbat pe <azi>”.
 
