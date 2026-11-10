@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 — 2026-11-10
+- Prețuri cu istoric: fiecare serviciu are o listă de prețuri cu „Valabil de la”. Programările își păstrează prețul lor, deci rapoartele din trecut nu se schimbă când modifici prețul.
+- Programare nouă: prețul se completează cu cel valabil la data programării și se reface la schimbarea serviciului sau a datei (dacă nu l-ai scris de mână).
+- La un preț nou, aplicația întreabă dacă actualizează programările „Programat” de la acea dată încolo care au încă prețul vechi. Cele finalizate, cele din trecut și cele cu preț schimbat de mână rămân neschimbate.
+- Versiunea aplicației apare jos în Setări („Versiune 1.3.0 · <commit>”).
+- Teste: `tsc --noEmit` OK; build web OK; teste pe logica prețurilor (prag de dată, înlocuire la aceeași dată, programări afectate) OK; în browser: istoric afișat, confirmare → doar programarea viitoare cu prețul vechi actualizată, prețul completat automat la programare nouă OK. Netestat pe telefon real și cu sincronizarea pe Google real.
+
 ## 1.2.0 — 2026-11-02
 - Aspect nou: fonturi Playfair Display + Manrope, antete cu degradeu prună–roz, accente aurii, carduri cu inițiale, bară de jos plutitoare, ferestre centrate pe calculator.
 - Browser pe calculator: bară laterală (logo, „Programare nouă”, meniu, stare sincronizare), calendar mai înalt, panou „Azi” (statistici, următoarea clientă, programul zilei); luna și anul pe mai multe coloane.
