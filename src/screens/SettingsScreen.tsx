@@ -319,7 +319,7 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
 
   const save = () => {
     const base: Procedure = { ...proc, name: name.trim(), durationMin: dur, color };
-    if (usePrices && validPrice) onSave(addPrice(base, from, pr, today), { from: history.length ? from : '', price: pr });
+    if (usePrices && validPrice) onSave(addPrice(base, from, pr, today), { from, price: pr });
     else onSave(base);
   };
 
@@ -352,15 +352,11 @@ function ServiceSheet({ proc, usePrices, canDelete, onClose, onSave, onDelete }:
           ) : null}
           <Label>{history.length ? t.settings.priceNew : t.settings.servicePrice}</Label>
           <Input value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder={current !== undefined ? `${current} ${t.lei}` : `ex. 120 ${t.lei}`} />
-          {history.length ? (
-            <>
-              <Label>{t.settings.priceFrom}</Label>
-              <Pressable onPress={() => setPickFrom(true)} style={st.dateBtn} accessibilityRole="button">
-                <Ionicons name="calendar" size={20} color={colors.primary} />
-                <Text style={st.rowText}>{dateWithYear(from)}</Text>
-              </Pressable>
-            </>
-          ) : null}
+          <Label>{t.settings.priceFrom}</Label>
+          <Pressable onPress={() => setPickFrom(true)} style={st.dateBtn} accessibilityRole="button">
+            <Ionicons name="calendar" size={20} color={colors.primary} />
+            <Text style={st.rowText}>{dateWithYear(from)}</Text>
+          </Pressable>
           <Text style={[st.sub, { marginTop: 8 }]}>{t.settings.priceHint}</Text>
         </>
       ) : null}
