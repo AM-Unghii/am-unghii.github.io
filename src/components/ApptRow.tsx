@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, font, initials, personalColor, radius, shadow, tint } from '../theme';
 import { t } from '../i18n';
 import { endTime } from '../utils/date';
-import { apptName } from '../utils/appts';
+import { apptName, isAllDay } from '../utils/appts';
 
 export const procColor = (a: Appointment, procs: Procedure[]) =>
   procs.find((p) => p.id === a.procedureId)?.color || (a.personal ? personalColor : '#9A8FA0');
@@ -33,8 +33,8 @@ export function ApptRow({ a, procs, showPrice, onPress, compact }: { a: Appointm
         </View>
       </View>
       <View style={{ alignItems: 'flex-end' }}>
-        <View style={st.timePill}><Text style={st.time}>{a.time}</Text></View>
-        {!compact ? <Text style={st.end}>{t.until} {endTime(a.time, a.durationMin)}</Text> : null}
+        <View style={st.timePill}><Text style={st.time}>{isAllDay(a) ? t.period.allDay : a.time}</Text></View>
+        {!compact && !isAllDay(a) ? <Text style={st.end}>{t.until} {endTime(a.time, a.durationMin)}</Text> : null}
         {a.status !== 'programat' ? (
           <View style={[st.badge, { backgroundColor: done ? tint(colors.success, 0.12) : '#EFEAF0' }]}>
             <Text style={[st.badgeText, { color: done ? colors.success : colors.muted }]}>{t.statuses[a.status]}</Text>

@@ -5,7 +5,7 @@ import { colors, tint, font } from '../theme';
 import { t } from '../i18n';
 import { dayNum, dowIndex, toMin, todayISO } from '../utils/date';
 import { procColor } from './ApptRow';
-import { apptName } from '../utils/appts';
+import { apptName, isAllDay } from '../utils/appts';
 import { Ionicons } from '@expo/vector-icons';
 
 const HOUR_H_BASE = 64;
@@ -45,7 +45,10 @@ export function TimeGrid({
 }) {
   const HOUR_H = tall ? 76 : HOUR_H_BASE;
   const today = todayISO();
-  const visible = useMemo(() => appts.filter((a) => a.status !== 'anulat'), [appts]);
+  const visible = useMemo(() => appts.filter((a) => a.status !== 'anulat' && !isAllDay(a)), [appts]);
+  // „toată ziua” (săptămâna verde, concediu): bandă sus, nu în grila orelor
+  const allDay = useMemo(() => appts.filter((a) => a.status !== 'anulat' && isAllDay(a)), [appts]);
+  const hasBand = days.some((d) => allDay.some((a) => a.date === d));
 
   let lo = startHour; let hi = endHour;
   for (const a of visible) {
@@ -74,6 +77,24 @@ export function TimeGrid({
           );
         })}
       </View>
+      {hasBand ? (
+        <View style={st.bandRow}>
+          <View style={{ width: GUTTER }} />
+          {days.map((d) => (
+            <View key={d} style={st.bandCell}>
+              {allDay.filter((a) => a.date === d).map((a) => {
+                const c = procColor(a, procs);
+                return (
+                  <Pressable key={a.id} onPress={() => onAppt(a)} accessibilityLabel={`${t.period.allDay} ${apptName(a)}`}
+                    style={[st.band, { backgroundColor: tint(c, 0.16), borderColor: tint(c, 0.7) }]}>
+                    <Text style={st.bandTxt} numberOfLines={narrow ? 1 : 2}>{narrow ? apptName(a).charAt(0).toUpperCase() : apptName(a)}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      ) : null}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', height: hours.length * HOUR_H }}>
           <View style={{ width: GUTTER }}>
@@ -138,6 +159,10 @@ export function TimeGrid({
 
 const st = StyleSheet.create({
   headRow: { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line },
+  bandRow: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: colors.line },
+  bandCell: { flex: 1, paddingHorizontal: 1 },
+  band: { borderRadius: 8, borderWidth: 1, borderStyle: 'dashed', paddingHorizontal: 4, paddingVertical: 3, marginBottom: 2, alignItems: 'center' },
+  bandTxt: { fontSize: 11, ...font.w800, color: colors.ink, textAlign: 'center' },
   headCell: { flex: 1, alignItems: 'center' },
   dow: { fontSize: 12, ...font.w700, color: colors.muted, textTransform: 'uppercase' },
   dnumWrap: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginTop: 2 },

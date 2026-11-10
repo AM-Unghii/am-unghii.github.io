@@ -2,6 +2,10 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.5.2 — toată ziua
+1. Programare nouă → Personală → „Rezervă mai multe zile” → „Toată ziua” pornit, nume „Concediu”, alegi datele (ex. 7 zile, cu „Doar luni–vineri” oprit) → Rezervă: în Săptămână apare banda „Concediu” sus pe fiecare zi.
+2. Programare pentru clientă într-una din zile → avertizare „ai o programare personală”; în „În ziua aceea” scrie „Toată ziua”.
+
 ## 1.5.1 — rezervă o perioadă
 1. Programare nouă → „Personală (a mea)” → „Rezervă mai multe zile…” → „Săptămâna viitoare”, nume „Săptămâna verde” → „Rezervă zilele”: 5 blocuri luni–vineri în calendar.
 2. Programare pentru o clientă în una din zile → avertizare de suprapunere cu „Săptămâna verde”.

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.2 — 2026-11-10
+- **„Toată ziua”** pentru perioade (săptămâna verde, concediu, școală): în „Rezervă mai multe zile” e pornit implicit și nu mai trebuie oră. În calendar apare ca bandă sus pe fiecare zi, iar la verificarea unei programări contează ca ocupat toată ziua. Poți dezactiva comutatorul ca să alegi ore. Și la o programare personală simplă există butonul „Toată ziua”. Fără schimbări în Code.gs.
+
 ## 1.5.1 — 2026-11-10
 - **Rezervă o perioadă**: la „Programare personală” apare butonul „Rezervă mai multe zile (săptămâna verde, școală…)”. Alegi săptămâna (săptămâna asta / viitoare / peste 2) sau datele de la–până, numele („Săptămâna verde”), orele și dacă doar luni–vineri. Se pune câte o programare personală pe zi (fără cheltuială), vizibilă în calendar și luată în calcul la suprapuneri. Se modifică sau se șterge pe fiecare zi în parte. Fără schimbări în Code.gs față de 1.5.0.
 

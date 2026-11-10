@@ -8,6 +8,11 @@ export const defaultListPrefs: ListPrefs = { sort: 'data', period: 'viitoare', s
 /** Serviciul folosit pentru programările personale când nu există niciunul de tip „personal”. */
 export const PERSONAL_ID = 'p-personal';
 
+/** Programare personală pe toată ziua (săptămâna verde, concediu): durata de 24 h, fără oră. */
+export const isAllDay = (a: Pick<Appointment, 'personal' | 'durationMin'>) => !!a.personal && a.durationMin >= 1440;
+/** Intervalul afișat: „Toată ziua” sau „10:00–11:00”. */
+export const timeSpan = (a: Pick<Appointment, 'personal' | 'durationMin' | 'time'>, end: string) => (isAllDay(a) ? t.period.allDay : `${a.time}–${end}`);
+
 export const isPersonalProc = (p?: Procedure) => p?.kind === 'personal';
 
 /** Lista de servicii + unul personal implicit, dacă utilizatoarea nu are încă niciun serviciu personal. */
