@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 — 2026-11-10
+- Actualizare mai rapidă: pagina aplicației se cere mereu de la server (fără cache de ~10 min), deci o versiune nouă apare la prima redeschidere.
+- Teste: `node --check` pe service worker OK; `tsc --noEmit` OK. Netestat pe telefon real.
+
 ## 1.3.0 — 2026-11-10
 - Prețuri cu istoric: fiecare serviciu are o listă de prețuri cu „Valabil de la”. Programările își păstrează prețul lor, deci rapoartele din trecut nu se schimbă când modifici prețul.
 - Programare nouă: prețul se completează cu cel valabil la data programării și se reface la schimbarea serviciului sau a datei (dacă nu l-ai scris de mână).

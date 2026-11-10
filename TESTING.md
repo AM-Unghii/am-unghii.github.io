@@ -2,6 +2,9 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.3.1 — actualizare rapidă
+1. După publicare (vezi Actions, verde), închizi aplicația/tab-ul și redeschizi → Setări, jos: „Versiune 1.3.1”. Dacă încă arată versiunea veche, o mai redeschizi o dată (prima deschidere instalează noul service worker).
+
 ## 1.3.0 — prețuri cu istoric
 
 Pregătire: Setări → „Folosesc prețuri” pornit; serviciul Manichiură cu un preț (ex. 100 lei); câteva programări Manichiură: una trecută și „Finalizat”, două viitoare „Programat” cu 100 lei, una viitoare cu alt preț scris de mână (ex. 90).
