@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2 — 2026-11-10
+- Serviciu → câmpul „Valabil de la” apare mereu, și la primul preț al unui serviciu (înainte apărea doar după ce serviciul avea deja un preț).
+- Teste: `tsc --noEmit` OK; build web OK; verificat în browser. Netestat pe telefon real.
+
 ## 1.3.1 — 2026-11-10
 - Actualizare mai rapidă: pagina aplicației se cere mereu de la server (fără cache de ~10 min), deci o versiune nouă apare la prima redeschidere.
 - Teste: `node --check` pe service worker OK; `tsc --noEmit` OK. Netestat pe telefon real.

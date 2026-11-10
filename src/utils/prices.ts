@@ -19,8 +19,8 @@ export function priceOn(p: Procedure | undefined, date: string): number | undefi
 /** Adaugă un preț nou valabil de la `from`; un preț cu aceeași dată îl înlocuiește. `price` rămâne prețul de azi (compatibilitate). */
 export function addPrice(p: Procedure, from: string, price: number, today: string): Procedure {
   const h = priceHistory(p);
-  // primul preț dintr-un serviciu fără istoric e valabil mereu
-  const entry: PricePoint = { from: h.length ? from : '', price };
+  // primul preț se aplică și programărilor dinainte de data lui (vezi priceOn)
+  const entry: PricePoint = { from, price };
   const prices = [...h.filter((x) => x.from !== entry.from), entry].sort((a, b) => a.from.localeCompare(b.from));
   const next = { ...p, prices };
   return { ...next, price: priceOn(next, today) };
