@@ -9,6 +9,7 @@ import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700
 import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 import { AppProvider, useApp } from './src/store/AppContext';
 import { ProgramScreen } from './src/screens/ProgramScreen';
+import { HomeScreen } from './src/screens/HomeScreen';
 import { ListScreen } from './src/screens/ListScreen';
 import { ReportsScreen } from './src/screens/ReportsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -18,8 +19,9 @@ import { useWide } from './src/components/ui';
 import { todayISO } from './src/utils/date';
 import { applyAppIcon, logoImages, logoVariant } from './src/services/appIcon';
 
-type Tab = 'program' | 'list' | 'reports' | 'settings';
+type Tab = 'home' | 'program' | 'list' | 'reports' | 'settings';
 const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'home', icon: 'home-outline', iconOn: 'home' },
   { key: 'program', icon: 'calendar-outline', iconOn: 'calendar' },
   { key: 'list', icon: 'list-outline', iconOn: 'list' },
   { key: 'reports', icon: 'stats-chart-outline', iconOn: 'stats-chart' },
@@ -73,8 +75,9 @@ function Sidebar({ tab, setTab, onNew }: { tab: Tab; setTab: (t: Tab) => void; o
 
 function Shell() {
   const { loaded, settings } = useApp();
-  const [tab, setTab] = useState<Tab>('program');
+  const [tab, setTab] = useState<Tab>('home');
   const [newSignal, setNewSignal] = useState(0);
+  const [focus, setFocus] = useState<{ date: string; n: number } | undefined>(undefined);
   const insets = useSafeAreaInsets();
   const wide = useWide();
   const variant = logoVariant(settings.logoBg, settings.logoShape);
@@ -84,7 +87,8 @@ function Shell() {
   }
   const screens = (
     <>
-      <View style={{ flex: 1, display: tab === 'program' ? 'flex' : 'none' }}><ProgramScreen newSignal={newSignal} /></View>
+      {tab === 'home' ? <HomeScreen go={setTab} onDay={(date) => { setFocus((f) => ({ date, n: (f?.n || 0) + 1 })); setTab('program'); }} /> : null}
+      <View style={{ flex: 1, display: tab === 'program' ? 'flex' : 'none' }}><ProgramScreen newSignal={newSignal} focus={focus} /></View>
       {tab === 'list' ? <ListScreen /> : null}
       {tab === 'reports' ? <ReportsScreen goSettings={() => setTab('settings')} /> : null}
       {tab === 'settings' ? <SettingsScreen /> : null}
@@ -106,12 +110,12 @@ function Shell() {
         <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.plum }}>
           <View style={{ flex: 1, backgroundColor: colors.bg }}>{screens}</View>
         </SafeAreaView>
-        <View style={[st.barWrap, { paddingBottom: Math.max(insets.bottom, 10) }]} pointerEvents="box-none">
+        {tab !== 'home' ? <View style={[st.barWrap, { paddingBottom: Math.max(insets.bottom, 10) }]} pointerEvents="box-none">
           <View style={st.bar}>
             {TABS.map((x) => {
               const on = tab === x.key;
               return (
-                <Pressable key={x.key} style={st.tab} onPress={() => setTab(x.key)} accessibilityRole="tab" accessibilityLabel={t.tabs[x.key]} accessibilityState={{ selected: on }}>
+                <Pressable key={x.key} style={[st.tab, { flex: on ? 2.6 : 1 }]} onPress={() => setTab(x.key)} accessibilityRole="tab" accessibilityLabel={t.tabs[x.key]} accessibilityState={{ selected: on }}>
                   {on ? (
                     <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.pill}>
                       <Ionicons name={x.iconOn} size={20} color="#fff" />
@@ -124,7 +128,7 @@ function Shell() {
               );
             })}
           </View>
-        </View>
+        </View> : null}
       </View>
     </View>
   );
@@ -159,7 +163,7 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: '#F0E6EA', ...shadow, shadowOpacity: 0.16, shadowRadius: 24,
   },
   tab: { flex: 1, alignItems: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 46, paddingHorizontal: 16, borderRadius: 999, gap: 6 },
+  pill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 46, paddingHorizontal: 12, borderRadius: 999, gap: 6 },
   tabTextOn: { fontSize: 14, ...font.w700, color: '#fff' },
   side: { width: 260, paddingHorizontal: 18, paddingVertical: 24 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 6 },

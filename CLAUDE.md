@@ -10,7 +10,7 @@ Aplicație (Android, iOS, web) pentru programări manichiură/pedichiură. Inter
 - `eas build -p android --profile preview` / `eas build -p ios` — build mobil (cont Expo necesar)
 
 ## Hartă
-- `App.tsx` — taburi (Program / Rapoarte / Setări)
+- `App.tsx` — taburi (Acasă / Program / Programări / Rapoarte / Setări); `src/screens/HomeScreen.tsx` = pagina principală (telefon: cronologie verticală + bară proprie; lat: ziua pe orizontală)
 - `src/i18n.ts` — TOATE textele vizibile (română)
 - `src/store/` — stare + salvare locală (AsyncStorage) cu copie de siguranță automată
 - `src/services/` — notificări, calendar telefon (+ link Google Calendar), Excel (export/import), `sync.ts` (client sincronizare)
