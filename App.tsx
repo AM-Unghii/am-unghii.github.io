@@ -9,6 +9,7 @@ import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700
 import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 import { AppProvider, useApp } from './src/store/AppContext';
 import { ProgramScreen } from './src/screens/ProgramScreen';
+import { ListScreen } from './src/screens/ListScreen';
 import { ReportsScreen } from './src/screens/ReportsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { colors, font, gradients, shadow } from './src/theme';
@@ -17,9 +18,10 @@ import { useWide } from './src/components/ui';
 import { todayISO } from './src/utils/date';
 import { applyAppIcon, logoImages, logoVariant } from './src/services/appIcon';
 
-type Tab = 'program' | 'reports' | 'settings';
+type Tab = 'program' | 'list' | 'reports' | 'settings';
 const TABS: { key: Tab; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof typeof Ionicons.glyphMap }[] = [
   { key: 'program', icon: 'calendar-outline', iconOn: 'calendar' },
+  { key: 'list', icon: 'list-outline', iconOn: 'list' },
   { key: 'reports', icon: 'stats-chart-outline', iconOn: 'stats-chart' },
   { key: 'settings', icon: 'settings-outline', iconOn: 'settings' },
 ];
@@ -83,6 +85,7 @@ function Shell() {
   const screens = (
     <>
       <View style={{ flex: 1, display: tab === 'program' ? 'flex' : 'none' }}><ProgramScreen newSignal={newSignal} /></View>
+      {tab === 'list' ? <ListScreen /> : null}
       {tab === 'reports' ? <ReportsScreen goSettings={() => setTab('settings')} /> : null}
       {tab === 'settings' ? <SettingsScreen /> : null}
     </>

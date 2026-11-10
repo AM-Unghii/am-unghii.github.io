@@ -2,6 +2,17 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.4.0 — tab „Programări”, reprogramare, anulare, ștergere
+Înainte: Setări, jos: „Versiune 1.4.0”. Dacă folosești Google Calendar/sincronizare: lipește noul Code.gs în Apps Script și publică o versiune nouă.
+1. Tab „Programări”: rândul de sus — scrii nume, alegi data, scrii ora (ex. 1430 sau 14:30), Enter → apare în listă. Fără nume sau oră: mesaj de eroare.
+2. Schimbă Sortarea / Perioada / Statusul → lista se reordonează și se filtrează; închide și redeschide aplicația → alegerile rămân.
+3. „Reprogramează” pe o programare → calendar → alegi ziua → scrii ora → „Mută”. Rândul apare cu „mutată o dată”. Status „Reprogramate” o arată.
+4. „Anulează” → confirmare → rămâne în listă tăiată, „Anulată”. „Reactivează” o readuce.
+5. „Șterge” → confirmare → dispare definitiv.
+6. Program (calendar) → apeși pe o programare → jos: aceleași 3 butoane.
+7. Rapoarte → „Anulate” și „Reprogramate” corespund cu cele de mai sus.
+8. Cu sincronizarea: pe al doilea dispozitiv apar mutarea, anularea și ștergerea; Google Calendar: evenimentul se mută / dispare.
+
 ## 1.3.3 — istoric „de la cât la cât”
 1. Setări → serviciu cu preț 100 → Preț nou 120, Valabil de la o dată viitoare → Salvează → redeschizi: rândul de sus arată „100 → 120 lei”, „de la <data> · urmează” și „schimbat pe <azi>”.
 

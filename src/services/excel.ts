@@ -8,17 +8,17 @@ import { todayISO, uid } from '../utils/date';
 import { priceOn } from '../utils/prices';
 import { procedureColors } from '../theme';
 
-const HEAD = ['Data', 'Ora', 'Durată (min)', 'Nume', 'Telefon', 'Procedură', 'Preț (lei)', 'Status', 'Observații', 'ID'];
+const HEAD = ['Data', 'Ora', 'Durată (min)', 'Nume', 'Telefon', 'Procedură', 'Preț (lei)', 'Status', 'Observații', 'ID', 'Reprogramări'];
 const SHEET = 'Programări';
 
 function buildBook(appts: Appointment[], procedures: Procedure[]) {
   const sorted = [...appts].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   const rows = sorted.map((a) => [
     a.date, a.time, a.durationMin, a.clientName, a.phone || '', a.procedureName,
-    a.price ?? '', a.status, a.notes || '', a.id,
+    a.price ?? '', a.status, a.notes || '', a.id, a.reschedules?.length || 0,
   ]);
   const ws = XLSX.utils.aoa_to_sheet([HEAD, ...rows]);
-  ws['!cols'] = [12, 7, 12, 24, 14, 24, 11, 11, 30, 16].map((wch) => ({ wch }));
+  ws['!cols'] = [12, 7, 12, 24, 14, 24, 11, 11, 30, 16, 12].map((wch) => ({ wch }));
   const wp = XLSX.utils.aoa_to_sheet([
     ['Serviciu', 'Durată (min)', 'Preț (lei)'],
     ...procedures.map((p) => [p.name, p.durationMin, priceOn(p, todayISO()) ?? '']),

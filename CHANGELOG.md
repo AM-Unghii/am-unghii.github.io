@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 — 2026-11-10
+- Tab nou „Programări” (între Program și Rapoarte): lista tuturor programărilor, ca într-un tabel. Sortare (dată, nume, procedură, adăugate recent), perioadă (de azi încolo, azi, săptămâna asta, trecute, toate), status (inclusiv „Reprogramate”) și căutare. Alegerile se păstrează.
+- Rândul de sus = adăugare rapidă: nume, dată (calendar), oră, procedură; Enter adaugă programarea, care intră în listă în ordinea aleasă. Avertizează dacă se suprapune.
+- Pe fiecare programare, trei butoane: **Reprogramează** (se deschide calendarul, apoi ora), **Anulează** (rămâne în listă cu statusul „Anulată”, cu confirmare) și **Șterge** (definitiv, cu confirmare). Aceleași butoane apar și în fereastra programării din calendar. O programare anulată se poate reactiva sau reprograma.
+- Fiecare mutare se ține minte (de unde → unde). Rapoarte: carduri noi „Anulate” și „Reprogramate”.
+- Sincronizare: coloană nouă `reprogramari` în Google Sheet — **trebuie lipit din nou Code.gs și publicată o versiune nouă** (fără asta, lista de mutări nu ajunge pe celelalte dispozitive; restul merge ca înainte). Google Calendar: mutarea mută evenimentul, anularea/ștergerea îl scoate, reactivarea îl recreează (logica existentă). Excel: coloană „Reprogramări”.
+- Teste: vezi PR.
+
 ## 1.3.3 — 2026-11-10
 - Istoric prețuri mai clar: fiecare rând arată de la cât la cât s-a schimbat (ex. „100 → 120 lei”), de când e valabil și în ce zi l-ai introdus („schimbat pe …”). Prețurile introduse înainte de 1.3.3 nu au ziua schimbării.
 - Teste: `tsc --noEmit` OK; build web OK; verificat în browser. Netestat pe telefon real.
