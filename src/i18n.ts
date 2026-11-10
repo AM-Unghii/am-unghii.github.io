@@ -177,6 +177,8 @@ export const t = {
     priceNew: 'Preț nou (opțional)',
     priceFrom: 'Valabil de la',
     priceHistory: 'Istoric prețuri',
+    priceHistoryAll: 'Istoric prețuri (toate serviciile)',
+    priceHistoryEmpty: 'Încă nu ai trecut prețuri. Apasă pe un serviciu din „Serviciile mele” și scrie prețul; schimbările vor apărea aici.',
     priceAlways: 'dintotdeauna',
     priceSince: (d: string) => `de la ${d}`,
     priceUpcoming: 'urmează',

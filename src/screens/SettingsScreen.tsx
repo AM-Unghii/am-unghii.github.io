@@ -214,6 +214,7 @@ export function SettingsScreen() {
           <Text style={st.rowText}>{settings.usePrices ? t.settings.on : t.settings.off}</Text>
           <Switch value={settings.usePrices} onValueChange={(v) => updateSettings({ usePrices: v })} trackColor={{ true: colors.primary, false: '#DDD3DF' }} />
         </Row>
+        {settings.usePrices ? <AllPriceHistory procedures={procedures} onOpen={setEditing} /> : null}
       </Section>
 
       <Section icon="sparkles-outline" title={t.settings.services} hint={t.settings.servicesHint}>
@@ -285,6 +286,30 @@ export function SettingsScreen() {
         onClose={() => setEditing(null)} onSave={onSaveService} onDelete={(id) => { deleteProcedure(id); setEditing(null); }} />
       </View>
     </ScrollView>
+  );
+}
+
+/** toate schimbările de preț, ale tuturor serviciilor, cele mai noi primele */
+function AllPriceHistory({ procedures, onOpen }: { procedures: Procedure[]; onOpen: (p: Procedure) => void }) {
+  const today = todayISO();
+  const rows = procedures.flatMap((p) => priceHistory(p).map((h, i, all) => ({ p, h, prev: all[i - 1] })))
+    .sort((a, b) => (b.h.changedAt || b.h.from).localeCompare(a.h.changedAt || a.h.from) || b.h.from.localeCompare(a.h.from));
+  return (
+    <>
+      <Label>{t.settings.priceHistoryAll}</Label>
+      {rows.length ? rows.map(({ p, h, prev }) => (
+        <Pressable key={`${p.id}|${h.from}`} onPress={() => onOpen(p)} style={st.histRow} accessibilityRole="button">
+          <View style={{ flex: 1 }}>
+            <Text style={st.rowText}>{p.name}</Text>
+            <Text style={st.sub}>
+              {h.from ? t.settings.priceSince(dateWithYear(h.from)) : t.settings.priceAlways}{h.from > today ? ` · ${t.settings.priceUpcoming}` : ''}
+              {h.changedAt ? ` · ${t.settings.priceChangedOn(dateWithYear(h.changedAt))}` : ''}
+            </Text>
+          </View>
+          <Text style={st.histPrice}>{prev && prev.price !== h.price ? `${prev.price} → ` : ''}{h.price} {t.lei}</Text>
+        </Pressable>
+      )) : <Text style={st.sub}>{t.settings.priceHistoryEmpty}</Text>}
+    </>
   );
 }
 

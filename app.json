@@ -2,7 +2,7 @@
   "expo": {
     "name": "Programări Unghii",
     "slug": "programari-unghii",
-    "version": "1.5.2",
+    "version": "1.5.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
