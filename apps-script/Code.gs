@@ -13,8 +13,8 @@ var PAROLA = 'schimba-ma';
 
 var SHEET_NAME = 'Programări';
 var HEAD = ['id', 'data', 'ora', 'durata_min', 'nume', 'telefon', 'procedura_id', 'procedura', 'pret',
-            'observatii', 'status', 'creat', 'modificat', 'sters', 'server_mod', 'eveniment_calendar', 'calendar_sync'];
-var C_EVENT = 15, C_CALSYNC = 16;
+            'observatii', 'status', 'creat', 'modificat', 'sters', 'server_mod', 'eveniment_calendar', 'calendar_sync', 'reprogramari'];
+var C_EVENT = 15, C_CALSYNC = 16, C_RESCH = 17;
 var MAX_CAL_PER_CALL = 30; // ca un apel să nu dureze prea mult; restul se face la următoarea sincronizare
 
 function doGet() {
@@ -95,7 +95,8 @@ function toRow_(a, now, old) {
   return [a.id, a.date, a.time, a.durationMin, a.clientName, a.phone || '', a.procedureId || '', a.procedureName || '',
           (a.price === undefined || a.price === null) ? '' : a.price, a.notes || '', a.status || 'programat',
           a.createdAt || '', a.updatedAt || '', a.deleted ? 'DA' : '', now,
-          old ? (old[C_EVENT] || '') : '', old ? (old[C_CALSYNC] || '') : ''];
+          old ? (old[C_EVENT] || '') : '', old ? (old[C_CALSYNC] || '') : '',
+          (a.reschedules && a.reschedules.length) ? JSON.stringify(a.reschedules) : ''];
 }
 
 // ---------------- Google Calendar ----------------
@@ -203,6 +204,7 @@ function toAppt_(r) {
   if (r[5] !== '') a.phone = String(r[5]);
   if (r[8] !== '' && r[8] !== null) a.price = Number(r[8]);
   if (r[9] !== '') a.notes = String(r[9]);
+  if (r[C_RESCH]) { try { a.reschedules = JSON.parse(r[C_RESCH]); } catch (e) {} }
   return a;
 }
 
@@ -214,10 +216,10 @@ function sheet_() {
     sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold');
     sh.setFrozenRows(1);
   } else if (String(sh.getRange(1, HEAD.length).getValue()) !== HEAD[HEAD.length - 1]) {
-    sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold'); // coloane noi (calendar)
+    sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold'); // coloane noi (calendar, reprogramări)
   }
   // text simplu, ca Google sa nu transforme datele/orele/telefoanele
-  ['B:C', 'F:F', 'L:M', 'P:Q'].forEach(function (c) { sh.getRange(c).setNumberFormat('@'); });
+  ['B:C', 'F:F', 'L:M', 'P:R'].forEach(function (c) { sh.getRange(c).setNumberFormat('@'); });
   return sh;
 }
 

@@ -102,10 +102,11 @@ export function Label({ children }: { children: React.ReactNode }) {
   return <Text style={s.label}>{children}</Text>;
 }
 
-export function Input(props: TextInputProps) {
+export function Input(props: TextInputProps & { ref?: React.Ref<any> }) {
   const [focus, setFocus] = React.useState(false);
   return (
     <TextInput
+      ref={props.ref}
       placeholderTextColor="#B9AEBC"
       {...props}
       onFocus={(e) => { setFocus(true); props.onFocus?.(e); }}

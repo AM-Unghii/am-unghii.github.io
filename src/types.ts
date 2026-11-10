@@ -20,6 +20,16 @@ export interface Procedure {
   color: string;
 }
 
+/** o mutare a programării: de unde, unde și când s-a făcut */
+export interface Reschedule {
+  /** „YYYY-MM-DD HH:mm” înainte de mutare */
+  from: string;
+  /** „YYYY-MM-DD HH:mm” după mutare */
+  to: string;
+  /** momentul mutării (ISO) */
+  at: string;
+}
+
 export interface Appointment {
   id: string;
   clientName: string;
@@ -35,6 +45,8 @@ export interface Appointment {
   price?: number;
   notes?: string;
   status: Status;
+  /** istoricul mutărilor (pentru rapoarte: câte au fost reprogramate) */
+  reschedules?: Reschedule[];
   calendarEventId?: string;
   /** șters (rămâne ca „pietre de mormânt” ca ștergerea să se sincronizeze) */
   deleted?: boolean;
@@ -73,7 +85,14 @@ export interface Settings {
   logoBg: LogoBg;
   /** forma iconiței (contează doar cu fundal alb) */
   logoShape: LogoShape;
+  /** tabul „Programări”: sortarea și filtrele alese */
+  list?: ListPrefs;
 }
+
+export type ListSort = 'data' | 'dataDesc' | 'nume' | 'procedura' | 'adaugate';
+export type ListPeriod = 'viitoare' | 'azi' | 'saptamana' | 'trecute' | 'toate';
+export type ListStatus = 'toate' | 'programat' | 'finalizat' | 'anulat' | 'reprogramate';
+export interface ListPrefs { sort: ListSort; period: ListPeriod; status: ListStatus }
 
 export type LogoBg = 'alb' | 'transparent';
 export type LogoShape = 'patrat' | 'rotund';

@@ -7,6 +7,7 @@ import { createTestEvent, removeEvent, syncEvent } from '../services/calendar';
 import { callServer, mergeAppointments, splitCode, SyncError } from '../services/sync';
 import { t } from '../i18n';
 import { todayISO, uid } from '../utils/date';
+import { addReschedule } from '../utils/appts';
 import { Platform } from 'react-native';
 
 export type ApptInput = Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'calendarEventId' | 'deleted'> & {
@@ -24,6 +25,8 @@ interface Ctx {
   savedAt: string;
   saveAppointment: (input: ApptInput) => Promise<void>;
   setStatus: (id: string, status: Appointment['status']) => Promise<void>;
+  /** mută programarea (rămâne în istoric ca reprogramare); o anulată redevine „programat” */
+  rescheduleAppointment: (id: string, date: string, time: string) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => void;
   saveProcedure: (p: Procedure) => void;
@@ -190,9 +193,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveAppointment = useCallback(async (input: ApptInput) => {
     const now = new Date().toISOString();
     const old = input.id ? ref.current.appointments.find((x) => x.id === input.id) : undefined;
+    // mutarea unei programări existente (altă dată sau oră) se ține minte pentru rapoarte
+    const reschedules = old && !old.deleted ? addReschedule(old, input.date, input.time, now) : input.reschedules;
     let a: Appointment = {
       ...old,
       ...input,
+      reschedules,
       id: old?.id ?? input.id ?? uid(),
       status: input.status ?? old?.status ?? 'programat',
       createdAt: old?.createdAt ?? now,
@@ -214,6 +220,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setStatus = useCallback(async (id: string, status: Appointment['status']) => {
     const old = ref.current.appointments.find((x) => x.id === id);
     if (old) await saveAppointment({ ...old, status });
+  }, [saveAppointment]);
+
+  const rescheduleAppointment = useCallback(async (id: string, date: string, time: string) => {
+    const old = ref.current.appointments.find((x) => x.id === id);
+    if (old) await saveAppointment({ ...old, date, time, status: old.status === 'anulat' ? 'programat' : old.status });
   }, [saveAppointment]);
 
   const deleteAppointment = useCallback(async (id: string) => {
@@ -338,6 +349,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       savedAt,
       saveAppointment,
       setStatus,
+      rescheduleAppointment,
       deleteAppointment,
       updateSettings,
       saveProcedure,
@@ -355,7 +367,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sendTest,
     }),
     [loaded, live, data.procedures, data.settings, data.sync?.lastSyncAt, connected, savedAt, syncStatus, syncError,
-      saveAppointment, setStatus, deleteAppointment, updateSettings, saveProcedure, deleteProcedure, repriceAppointments, importAppointments, syncNow, connectSync, disconnectSync, calendarError, sendTest],
+      saveAppointment, setStatus, rescheduleAppointment, deleteAppointment, updateSettings, saveProcedure, deleteProcedure, repriceAppointments, importAppointments, syncNow, connectSync, disconnectSync, calendarError, sendTest],
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

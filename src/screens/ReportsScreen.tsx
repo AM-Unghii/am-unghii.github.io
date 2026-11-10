@@ -40,6 +40,10 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
   };
 
   const live = appointments.filter((x) => x.date >= a && x.date <= b && x.status !== 'anulat');
+  const inPeriod = appointments.filter((x) => x.date >= a && x.date <= b);
+  const cancelledN = inPeriod.filter((x) => x.status === 'anulat').length;
+  const movedN = inPeriod.filter((x) => (x.reschedules?.length || 0) > 0).length;
+  const movesN = inPeriod.reduce((sum, x) => sum + (x.reschedules?.length || 0), 0);
   const priced = live.filter((x) => x.price !== undefined);
   const total = priced.reduce((s, x) => s + (x.price || 0), 0);
   const byProc = useMemo(() => {
@@ -99,6 +103,14 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
         ) : null}
       </Row>
 
+      <Row style={{ gap: 12, marginTop: 12 }}>
+        <Card style={{ flex: 1 }}><Text style={st.kLbl}>{t.reports.cancelled}</Text><Text style={st.kVal}>{cancelledN}</Text></Card>
+        <Card style={{ flex: 1 }}>
+          <Text style={st.kLbl}>{t.reports.rescheduled}</Text><Text style={st.kVal}>{movedN}</Text>
+          {movesN !== movedN ? <Text style={st.note}>{t.reports.moves(movesN)}</Text> : null}
+        </Card>
+      </Row>
+
       <Text style={st.sec}>{t.reports.byProcedure}</Text>
       {byProc.length === 0 ? <Text style={st.none}>{t.reports.noData}</Text> : (
         <Card>
@@ -114,6 +126,7 @@ export function ReportsScreen({ goSettings }: { goSettings: () => void }) {
         </Card>
       )}
       {settings.usePrices ? <Text style={st.note}>{t.reports.note}</Text> : null}
+      <Text style={st.note}>{t.reports.noteStatus}</Text>
 
       <DatePicker
         visible={picker !== null}

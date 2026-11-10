@@ -3,6 +3,7 @@ import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Btn, Chip, Input, Label, Row, Sheet } from './ui';
 import { DatePicker } from './DatePicker';
+import { ApptActions } from './ApptActions';
 import { useApp } from '../store/AppContext';
 import { Appointment } from '../types';
 import { colors, radius, font } from '../theme';
@@ -174,20 +175,23 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
 
         <Btn label={t.save} icon="checkmark" onPress={save} style={{ marginTop: 24 }} />
 
+        {editing?.reschedules?.length ? (
+          <View style={{ marginTop: 18 }}>
+            <Label>{t.rs.history}</Label>
+            {editing.reschedules.map((r, i) => <Text key={i} style={st.hist}>{r.from} → {r.to}</Text>)}
+          </View>
+        ) : null}
+
         {editing ? (
           <View style={{ marginTop: 14, gap: 10 }}>
             {editing.phone ? <Btn kind="soft" icon="call" label={`${t.call} ${editing.phone}`} onPress={() => Linking.openURL(`tel:${editing.phone}`)} /> : null}
             <Btn kind="soft" icon="logo-google" label={t.addGoogle} onPress={() => openGoogleCalendar(editing)} />
             {editing.status === 'programat' ? (
-              <>
-                <Btn kind="soft" icon="checkmark-done" label={t.markDone} onPress={async () => { await setStatus(editing.id, 'finalizat'); onClose(); }} />
-                <Btn kind="ghost" icon="close-circle-outline" label={t.markCancelled} onPress={async () => { await setStatus(editing.id, 'anulat'); onClose(); }} />
-              </>
-            ) : (
+              <Btn kind="soft" icon="checkmark-done" label={t.markDone} onPress={async () => { await setStatus(editing.id, 'finalizat'); onClose(); }} />
+            ) : editing.status === 'finalizat' ? (
               <Btn kind="soft" icon="refresh" label={t.restore} onPress={async () => { await setStatus(editing.id, 'programat'); onClose(); }} />
-            )}
-            <Btn kind="danger" icon="trash-outline" label={t.delete}
-              onPress={() => confirm(t.confirmDelete, t.confirmDeleteBody, t.delete, async () => { await deleteAppointment(editing.id); onClose(); })} />
+            ) : null}
+            <ApptActions a={editing} onChanged={onClose} />
           </View>
         ) : null}
       </Sheet>
@@ -197,6 +201,7 @@ export function AppointmentSheet({ target, onClose }: { target: SheetTarget | nu
 }
 
 const st = StyleSheet.create({
+  hist: { fontSize: 14, color: colors.ink, ...font.w600, marginTop: 2 },
   err: { color: colors.danger, marginTop: 6, ...font.w600, fontSize: 15 },
   dateBtn: {
     minHeight: 54, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.line, backgroundColor: '#fff',
