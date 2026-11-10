@@ -73,7 +73,7 @@ function SidePanel({ onAppt }: { onAppt: (a: Appointment) => void }) {
   );
 }
 
-export function ProgramScreen({ newSignal = 0 }: { newSignal?: number }) {
+export function ProgramScreen({ newSignal = 0, focus }: { newSignal?: number; focus?: { date: string; n: number } }) {
   const { appointments, procedures, settings } = useApp();
   const wide = useWide();
   const [view, setView] = useState<ViewMode>(settings.defaultView);
@@ -115,6 +115,8 @@ export function ProgramScreen({ newSignal = 0 }: { newSignal?: number }) {
   const goToday = () => { setAnchor(todayISO()); setSelected(todayISO()); };
 
   React.useEffect(() => { if (newSignal > 0) openNew(); }, [newSignal]);
+  // din Acasă: apăsat pe o zi din săptămână → calendarul sare la ziua aceea
+  React.useEffect(() => { if (focus) { setAnchor(focus.date); setSelected(focus.date); } }, [focus?.n]);
 
   const customDays = rangeDays(from, to);
   const hasAny = appointments.length > 0;

@@ -9,7 +9,40 @@ export const t = {
   apptToday: (n: number) => (n === 0 ? 'nicio programare azi' : n === 1 ? '1 programare azi' : `${n} programări azi`),
   panel: { today: 'Azi', todayCount: 'programări azi', weekCount: 'în săptămâna asta', next: 'Urmează', todayList: 'Programul de azi' },
   emptyHintWide: 'Apasă pe o oră din calendar sau pe „Programare nouă”.',
-  tabs: { program: 'Program', list: 'Programări', reports: 'Rapoarte', settings: 'Setări' },
+  tabs: { home: 'Acasă', program: 'Program', list: 'Programări', reports: 'Rapoarte', settings: 'Setări' },
+  home: {
+    calendar: 'Calendar',
+    nextTitle: 'Următoarea programare',
+    inMin: (min: number) => {
+      if (min < 1) return 'acum';
+      if (min < 60) return `în ${min} min`;
+      const h = Math.floor(min / 60), m = min % 60;
+      return `în ${h} h${m ? ` ${m} min` : ''}`;
+    },
+    ongoing: 'acum',
+    tomorrow: 'mâine',
+    none: 'Nicio programare în continuare',
+    noneHint: 'Apasă pe „+” ca să adaugi una.',
+    dayTitle: 'Ziua pe ore',
+    busy: (min: number) => {
+      const h = Math.floor(min / 60), m = min % 60;
+      return h ? `${h} h${m ? ` ${m}` : ''} ocupate` : `${m} min ocupate`;
+    },
+    freeFrom: (time: string) => `liberă de la ${time}`,
+    dayEmpty: 'Nicio programare azi. Ziua e liberă.',
+    weekTitle: 'Săptămâna aceasta',
+    weekCount: (n: number) => (n === 0 ? '–' : n === 1 ? '1 programare' : `${n} programări`),
+    stats: { appts: 'programări', done: 'terminate', cancelled: 'anulate', busy: 'ocupate' },
+    cancelledN: (n: number) => (n === 1 ? '1 anulată' : `${n} anulate`),
+    range: (a: string, b: string) => `de la ${a} la ${b}`,
+    nowLbl: 'acum',
+    newShort: 'Nouă',
+    newSub: 'Clientă sau personală',
+    calSub: 'Zi, săptămână, lună',
+    listSub: 'Listă și căutare',
+    reportsSub: 'Încasări și cheltuieli',
+    settingsSub: 'Servicii, prețuri, sincronizare',
+  },
   views: { zi: 'Zi', '3zile': '3 zile', saptamana: 'Săptămână', luna: 'Lună', an: 'An', custom: 'Perioadă' },
   today: 'Azi',
   newAppt: 'Programare nouă',

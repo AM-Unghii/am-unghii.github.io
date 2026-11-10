@@ -2,6 +2,15 @@
 
 Înainte de test, verifică versiunea: **Setări → jos, „Versiune …”**. Trebuie să fie cea de mai jos.
 
+## 1.6.0 — pagina „Acasă”
+1. Deschizi aplicația → apare „Acasă”: data de azi, „N programări azi”, săptămâna curentă și „Următoarea programare”, cu „în X min”.
+2. „Ziua pe ore”: programările de azi în culoarea serviciului, linia fucsia la ora curentă, cele terminate mai șterse, cele anulate tăiate, iar cele personale pe toată ziua ca bandă sus.
+3. Apeși pe o programare (sau pe cardul „Următoarea programare”) → se deschide fereastra programării.
+4. Telefon: bara de jos → Calendar / Programări / Rapoarte / Setări deschid tabul respectiv; „+” deschide „Programare nouă” pe azi. Din alt tab, iconița casă te întoarce la Acasă.
+5. Apeși pe o zi din săptămână (ex. joi) → se deschide calendarul la ziua aceea.
+6. Calculator (fereastră lată): „Acasă” e prima în bara laterală; ziua e pe orizontală; butoanele de jos funcționează.
+7. Fără nicio programare azi: „Nicio programare azi. Ziua e liberă.” și „Nicio programare în continuare”.
+
 ## 1.5.2 — toată ziua
 1. Programare nouă → Personală → „Rezervă mai multe zile” → „Toată ziua” pornit, nume „Concediu”, alegi datele (ex. 7 zile, cu „Doar luni–vineri” oprit) → Rezervă: în Săptămână apare banda „Concediu” sus pe fiecare zi.
 2. Programare pentru clientă într-una din zile → avertizare „ai o programare personală”; în „În ziua aceea” scrie „Toată ziua”.

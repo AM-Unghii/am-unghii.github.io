@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0 — 2026-11-11
+- **Pagină nouă „Acasă”**, prima când deschizi aplicația. Arată data de azi, câte programări ai (și câte sunt anulate), **următoarea programare** cu „în X min” și **ziua pe ore**, cu o linie pentru ora curentă. Programările personale pe toată ziua apar ca bandă sus, iar cele anulate sunt tăiate.
+- **Pe telefon**: sus data mare și săptămâna curentă (punct auriu = zi cu programări; apeși pe o zi și se deschide calendarul la ziua aceea). Jos e o bară cu Calendar, Programări, „+” (programare nouă), Rapoarte și Setări. Din celelalte ecrane revii la Acasă din bara de jos (iconița casă).
+- **Pe calculator (ecran lat)**: în bara laterală apare „Acasă” prima. Ziua e desenată pe orizontală, sus sunt data, cifrele zilei și următoarea programare, iar jos săptămâna (câte programări pe zi) și butoane mari: Programare nouă, Calendar, Programări, Rapoarte.
+- Apăsat pe o programare se deschide fereastra ei, ca în calendar. Fără schimbări în Code.gs.
+- Teste: `tsc --noEmit` OK; build web OK; verificat în browser pe telefon (390 px) și pe calculator (1440 px). Netestat pe telefon real.
+
 ## 1.5.3 — 2026-11-10
 - Include și „Istoric prețuri pentru toate serviciile” din Setări (descris mai jos la 1.3.4, pus aici pe versiunea curentă) și „Toată ziua” (1.5.2).
 
